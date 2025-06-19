@@ -24,6 +24,15 @@ public class RichiestaMedica
 	@Column(name = "data_richiesta", nullable = false)
 	private Date dataEmissione;
 
+	/***
+	 *  @Temporal(TemporalType.TIMESTAMP) — che cos’è?
+	 * È un'annotazione di JPA che serve per specificare come una data (java.util.Date o java.util.Calendar)
+	 * deve essere salvata nel database.
+	 */
+	@Column(name = "data_accettazione")
+	@Temporal(TemporalType.TIMESTAMP) //salva questo campo nel database con data e ora
+	private Date dataAccettazione;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "tipo_richiesta")
 	private ETipoRichiesta tipoRichiesta;

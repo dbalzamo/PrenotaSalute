@@ -3,10 +3,9 @@ package prenotazione.medica.enums;
 public enum EStatoRichiesta
 {
     INVIATA,
-    RICEVUTA,
-    APPROVATA,
+    VISUALIZZATA,
+    ACCETTATA,
     RIFIUTATA,
-    PRONTA,
     ANNULLATA,
     SCADUTA
 }

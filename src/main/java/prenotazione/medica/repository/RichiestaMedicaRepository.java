@@ -10,7 +10,8 @@ import java.util.List;
 @Repository
 public interface RichiestaMedicaRepository extends JpaRepository<RichiestaMedica, Long>
 {
-    List<RichiestaMedica> findAllByStatoAndMedicoCurante_Id(EStatoRichiesta stato, Long medicoId);
 
+    List<RichiestaMedica> findAllByStatoAndMedicoCurante_Id(EStatoRichiesta stato, Long medicoId);
     List<RichiestaMedica> findAllByStatoAndPaziente_Id(EStatoRichiesta stato, Long pazienteId);
+    List<RichiestaMedica> findAllByStato(EStatoRichiesta stato);
 }

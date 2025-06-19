@@ -33,4 +33,11 @@ public class PazienteService
 
         return new SignupResponse(true, "Paziente registrato nel sistema.", null);
     }
+
+    public Paziente findById(Long id)
+    {
+        return Optional.of(pazienteRepository.findById(id)).get().orElseThrow(() -> new RuntimeException("ERRORE: Paziente non trovato con ID: " + id));
+    }
+
+    //public Paziente findBy
 }

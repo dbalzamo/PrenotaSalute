@@ -1,12 +1,15 @@
 package prenotazione.medica.services;
 
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.controller.AuthController;
 import prenotazione.medica.dto.request.RichiestaMedicaRequest;
+import prenotazione.medica.dto.request.RifiutoRichiestaRequest;
 import prenotazione.medica.enums.ERuolo;
 import prenotazione.medica.enums.EStatoRichiesta;
 import prenotazione.medica.enums.ETipoRichiesta;
@@ -17,6 +20,8 @@ import prenotazione.medica.model.RichiestaMedica;
 import prenotazione.medica.repository.RichiestaMedicaRepository;
 import prenotazione.medica.security.utils.SecurityUtils;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -36,6 +41,11 @@ public class RichiestaMedicaService
     @Autowired
     private MedicoCuranteService medicoCuranteService;
 
+
+    public RichiestaMedica findById(Long idRichiestaMedica)
+    {
+        return Optional.of(richiestaMedicaRepository.findById(idRichiestaMedica)).get().orElseThrow(() -> new RuntimeException("ERRORE: Richiesta medica non trovata con ID: " + idRichiestaMedica));
+    }
 
     public String creaRichiestaMedica(RichiestaMedicaRequest request)
     {
@@ -63,14 +73,12 @@ public class RichiestaMedicaService
 
             if (accountUtente.getRuolo() == ERuolo.PAZIENTE)
             {
-                logger.info("INFO: PAZIENTE CONFRONTO FATTO");
                 Paziente paziente = pazienteService.findByAccountId(accountUtente.getId());
                 return richiestaMedicaRepository.findAllByStatoAndPaziente_Id(stato, paziente.getId());
             }
 
             if (accountUtente.getRuolo() == ERuolo.MEDICO_CURANTE)
             {
-                logger.info("INFO: MEDICO CONFRONTO FATTO");
                 MedicoCurante medicoCurante = medicoCuranteService.findByAccountId(accountUtente.getId());
                 return richiestaMedicaRepository.findAllByStatoAndMedicoCurante_Id(stato, medicoCurante.getId());
             }
@@ -79,4 +87,66 @@ public class RichiestaMedicaService
         return Collections.emptyList();
     }
 
+    public String visualizzaRichiestaMedica(Long id)
+    {
+        Optional<RichiestaMedica> richiestaMedica = richiestaMedicaRepository.findById(id);
+
+        if (richiestaMedica.isPresent()){
+            richiestaMedica.get().setStato(EStatoRichiesta.VISUALIZZATA);
+            richiestaMedicaRepository.save(richiestaMedica.get());
+            return "Richiesta ID: " + id + " visualizzata!";
+        }
+        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + id);
+    }
+
+    public String rifiutaRichiestaMedica(RifiutoRichiestaRequest rifiutoRichiestaRequest)
+    {
+        Optional<RichiestaMedica> richiestaMedica = richiestaMedicaRepository.findById(rifiutoRichiestaRequest.getIdRichiesta());
+
+        if (richiestaMedica.isPresent()){
+            richiestaMedica.get().setStato(EStatoRichiesta.RIFIUTATA);
+            richiestaMedica.get().setDescrizione(rifiutoRichiestaRequest.getMotivazione());
+            richiestaMedicaRepository.save(richiestaMedica.get());
+            return "Richiesta ID: " + rifiutoRichiestaRequest.getIdRichiesta() + " rifiutata: '" + rifiutoRichiestaRequest.getMotivazione() + "'";
+        }
+        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + rifiutoRichiestaRequest.getIdRichiesta());
+    }
+
+    public Optional<RichiestaMedica> accettaRichiestaMedica(Long idRichiestaMedica)
+    {
+        Optional<RichiestaMedica> richiestaMedica = richiestaMedicaRepository.findById(idRichiestaMedica);
+
+        if (richiestaMedica.isPresent()){
+            richiestaMedica.get().setStato(EStatoRichiesta.ACCETTATA);
+            richiestaMedica.get().setDataAccettazione(new Date());
+            richiestaMedicaRepository.save(richiestaMedica.get());
+            return richiestaMedica;
+        }
+        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + idRichiestaMedica);
+    }
+
+    /***
+     * fixedRate fa partire il metodo ogni intervallo di tempo a prescindere dal tempo di esecuzione
+     * (può partire anche se la precedente esecuzione non è ancora finita).
+     */
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void aggiornaStatiScaduti() {
+        List<RichiestaMedica> richiesteAccettate = richiestaMedicaRepository.findAllByStato(EStatoRichiesta.ACCETTATA);
+
+        for (RichiestaMedica richiesta : richiesteAccettate) {
+            if (richiesta.getDataAccettazione() != null) {
+                long minutiTrascorsi = Duration.between(
+                        richiesta.getDataAccettazione().toInstant(),
+                        Instant.now()
+                ).toMinutes();
+
+                if (minutiTrascorsi >= 1) { // per test, 1 minuto
+                    richiesta.setStato(EStatoRichiesta.SCADUTA);
+                    richiestaMedicaRepository.save(richiesta);
+                    logger.info("Richiesta {} scaduta automaticamente.", richiesta.getId());
+                }
+            }
+        }
+    }
 }

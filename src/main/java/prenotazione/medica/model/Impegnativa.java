@@ -24,11 +24,9 @@ public class Impegnativa {
 	private String regione;
 
 	@Column(name = "codice_nre", unique = true, nullable = false, length = 16)
-	private char codiceNRE;
+	private String codiceNRE;
 
-	@Column(name = "data_prescrizione", nullable = false)
-	private Date dataPrescrizione;
-
+	@Enumerated(EnumType.STRING)
 	@Column(name = "tipo_ricetta", nullable = false, length = 50)
 	private ETipoRichiesta tipoRicetta;
 

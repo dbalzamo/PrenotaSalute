@@ -55,7 +55,7 @@ public class AuthController
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupRequest request)
     {
-        // Creazione account
+        // Creazione account utente
         SignupResponse signupResponse = accountService.creazioneAccount(request);
 
         if (!signupResponse.getIsSuccess())
@@ -63,6 +63,7 @@ public class AuthController
             return ResponseEntity.badRequest().body(signupResponse.getMessage());
         }
 
+        // Creazione utente
         switch (request.getRuolo())
         {
             case PAZIENTE:
