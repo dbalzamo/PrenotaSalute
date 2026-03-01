@@ -5,6 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entità JPA che rappresenta una prestazione sanitaria collegata a un'impegnativa.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> la prestazione è il dettaglio “tecnico” (codice, descrizione,
+ * quantità) associato a un'{@link Impegnativa}. Gestita nel contesto di
+ * {@link prenotazione.medica.services.ImpegnativaService} e restituita dalle API di dettaglio
+ * impegnativa.
+ * </p>
+ */
 @Entity
 @Table(name = "prestazione_sanitaria")
 @Data

@@ -8,6 +8,16 @@ import prenotazione.medica.enums.ERuolo;
 
 import java.util.Date;
 
+/**
+ * Richiesta di registrazione di un nuovo utente (paziente o medico curante).
+ * <p>
+ * Body di POST {@code /api/auth/signup}. Contiene credenziali (username, email, password), ruolo,
+ * dati anagrafici comuni e, per il medico, la specializzazione. Opzionalmente il paziente può
+ * indicare il medico curante da associare. Validato con Bean Validation prima di essere processato
+ * da {@link prenotazione.medica.controller.AuthController} e
+ * {@link prenotazione.medica.services.AccountService}.
+ * </p>
+ */
 @Data
 public class SignupRequest
 {
@@ -38,4 +48,7 @@ public class SignupRequest
 
     // Campi solo per medico
     private String specializzazione;
+
+    /** Opzionale: id del medico curante da associare al paziente in fase di registrazione. */
+    private Long medicoCuranteId;
 }

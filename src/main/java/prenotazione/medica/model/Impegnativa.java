@@ -1,14 +1,25 @@
 package prenotazione.medica.model;
 
-import java.util.Date;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import prenotazione.medica.enums.EPriorità;
+import prenotazione.medica.enums.EPrioritàPrescrizione;
 import prenotazione.medica.enums.ETipoRichiesta;
 
+/**
+ * Entità JPA che rappresenta un'impegnativa (prescrizione) emessa dal medico per il paziente.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> l'impegnativa è creata/gestita da
+ * {@link prenotazione.medica.services.ImpegnativaService} ed esposta da
+ * {@link prenotazione.medica.controller.ImpegnativaController}. Può essere collegata a una
+ * {@link PrestazioneSanitaria} (uno-a-uno). Regione, codice NRE e priorità sono usati per
+ * identificazione e flussi amministrativi.
+ * </p>
+ *
+ * @see EPrioritàPrescrizione – priorità della prescrizione.
+ * @see ETipoRichiesta – tipo di ricetta (es. farmaco, visita).
+ */
 @Entity
 @Table(name="impegnativa")
 @Data
@@ -32,7 +43,7 @@ public class Impegnativa {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "priorita")
-	private EPriorità priorità;
+	private EPrioritàPrescrizione priorità;
 
 	@ManyToOne
 	@JoinColumn(name = "id_paziente")

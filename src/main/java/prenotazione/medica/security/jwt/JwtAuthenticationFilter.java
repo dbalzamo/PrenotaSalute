@@ -19,6 +19,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import prenotazione.medica.services.UserDetailsServiceImpl;
 
+/**
+ * Filtro Spring Security che esegue l'autenticazione JWT su ogni richiesta HTTP.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> inserito nella catena prima di {@link UsernamePasswordAuthenticationFilter}.
+ * Estrae il JWT dalla richiesta (tramite {@link JwtService#getJwtFromRequest}), lo valida, ricava
+ * lo username e carica i {@link UserDetails} con {@link UserDetailsServiceImpl#loadUserByUsername},
+ * poi imposta l'{@link org.springframework.security.core.Authentication} nel
+ * {@link org.springframework.security.core.context.SecurityContextHolder}. I controller e
+ * SecurityUtils possono così ottenere l'utente corrente. Per le richieste WebSocket l'autenticazione
+ * avviene in handshake ({@link prenotazione.medica.config.JwtHandshakeHandler}).
+ * </p>
+ *
+ * @see OncePerRequestFilter – garantisce una sola esecuzione per richiesta.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -34,6 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            if (jwt == null) {
+                logger.debug("JWT is null for request URI: {}", request.getRequestURI());
+            } else if (!jwtService.validateJwtToken(jwt)) {
+                logger.warn("JWT validation failed for request URI: {}", request.getRequestURI());
+            }
             if (jwt != null && jwtService.validateJwtToken(jwt)) {
                 String username = jwtService.getUserNameFromJwtToken(jwt);
 
@@ -48,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            logger.error("Cannot set user authentication: {} - {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
@@ -57,8 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request)
     {
-        String jwt = jwtService.getJwtFromCookies(request);
-        return jwt;
+        return jwtService.getJwtFromRequest(request);
     }
 
 }

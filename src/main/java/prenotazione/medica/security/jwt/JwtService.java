@@ -22,6 +22,18 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import prenotazione.medica.model.UserDetailsImpl;
 
+/**
+ * Servizio per la generazione, validazione e estrazione del JWT.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> usato da {@link JwtAuthenticationFilter} per validare il token
+ * su ogni richiesta HTTP, da {@link JwtHandshakeHandler} (config) per l'handshake WebSocket, e da
+ * {@link prenotazione.medica.services.AccountService} per generare il token al login. Il token può
+ * essere letto da header Authorization (Bearer), da cookie o da query param "token" (per /ws).
+ * Chiave e scadenza sono configurati in application.properties (jwt.secret, jwt.expirationMs).
+ * </p>
+ *
+ * @see io.jsonwebtoken.Jwts – libreria JJWT per creare e parsare JWT.
+ */
 @Service
 public class JwtService
 {
@@ -34,6 +46,23 @@ public class JwtService
     @Value("${jwt.jwtCookieName}")
     private String jwtCookie;
 
+
+    /**
+     * Estrae il JWT dalla richiesta: prima dall'header Authorization (Bearer),
+     * poi dal cookie, infine dal query param "token" (per handshake WebSocket /ws).
+     */
+    public String getJwtFromRequest(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        String fromCookie = getJwtFromCookies(request);
+        if (fromCookie != null) return fromCookie;
+        if (request.getRequestURI() != null && request.getRequestURI().contains("/ws") && request.getParameter("token") != null) {
+            return request.getParameter("token");
+        }
+        return null;
+    }
 
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookie);
@@ -48,7 +77,12 @@ public class JwtService
     public ResponseCookie generateCookie(UserDetailsImpl userPrincipal) {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
         ResponseCookie cookie = ResponseCookie.from(jwtCookie, jwt)
-                .path("/prenotazione-medica").maxAge(24 * 60 * 60).httpOnly(true).build();
+                .path("/prenotazione-medica")
+                .maxAge(24 * 60 * 60)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
         return cookie;
     }
 

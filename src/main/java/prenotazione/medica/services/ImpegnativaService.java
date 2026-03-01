@@ -14,6 +14,14 @@ import prenotazione.medica.repository.ImpegnativaRepository;
 
 import java.util.Date;
 
+/**
+ * Servizio per la generazione di impegnative a partire da richieste mediche accettate.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> invocato da {@link prenotazione.medica.controller.ImpegnativaController} (POST genera-impegnativa).
+ * Recupera la richiesta medica, la accetta se non già accettata, crea Impegnativa e
+ * PrestazioneSanitaria collegate e persiste. Solo il medico curante può generare impegnative.
+ * </p>
+ */
 @Service
 public class ImpegnativaService
 {

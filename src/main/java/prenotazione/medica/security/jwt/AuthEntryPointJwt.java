@@ -17,6 +17,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Entry point invocato quando un utente non autenticato tenta di accedere a una risorsa protetta.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> configurato in {@link prenotazione.medica.security.config.WebSecurityConfig}
+ * tramite {@code exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))}.
+ * Invece di reindirizzare al login, restituisce una risposta JSON 401 con messaggio e path, adatta
+ * per API REST consumate da frontend SPA.
+ * </p>
+ *
+ * @see AuthenticationEntryPoint – interfaccia Spring Security per gestire richieste non autenticate.
+ */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 

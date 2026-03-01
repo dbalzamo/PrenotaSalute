@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import prenotazione.medica.controller.AuthController;
 import prenotazione.medica.dto.request.RichiestaMedicaRequest;
 import prenotazione.medica.dto.request.RifiutoRichiestaRequest;
+import prenotazione.medica.dto.response.RichiestaMedicaMedicoResponse;
 import prenotazione.medica.enums.ERuolo;
 import prenotazione.medica.enums.EStatoRichiesta;
 import prenotazione.medica.enums.ETipoRichiesta;
@@ -22,8 +23,20 @@ import prenotazione.medica.security.utils.SecurityUtils;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * Servizio per il ciclo di vita delle richieste mediche: creazione, visualizzazione, accettazione,
+ * rifiuto e job di scadenza.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> invocato da {@link prenotazione.medica.controller.RichiestaMedicaController} per tutti gli
+ * endpoint /api/richieste-mediche. Gestisce transizioni di stato ({@link EStatoRichiesta}),
+ * filtri per paziente/medico e stato, e uno job {@link Scheduled} che marca come SCADUTA le
+ * richieste accettate oltre un limite temporale. Fornisce anche i dati per le notifiche in
+ * dashboard (conteggi per stato).
+ * </p>
+ */
 @Service
 public class RichiestaMedicaService
 {
@@ -51,6 +64,7 @@ public class RichiestaMedicaService
     {
         RichiestaMedica richiestaMedica = modelMapper.map(request, RichiestaMedica.class);
 
+        richiestaMedica.setId(null);
         richiestaMedica.setPaziente(pazienteService.findByAccountId(SecurityUtils.getCurrentAccountId()));
         richiestaMedica.setMedicoCurante(medicoCuranteService.findById(request.getIdMedico()));
         richiestaMedica.setTipoRichiesta(ETipoRichiesta.valueOf(request.getTipoRichiesta()));
@@ -85,6 +99,53 @@ public class RichiestaMedicaService
         }
 
         return Collections.emptyList();
+    }
+
+    /** Restituisce tutte le richieste del paziente attualmente autenticato, ordinate per data (più recente prima). */
+    public List<RichiestaMedica> findAllByPazienteId()
+    {
+        Long accountId = SecurityUtils.getCurrentAccountId();
+        Optional<Account> accountOptional = accountService.findById(accountId);
+        if (accountOptional.isEmpty()) {
+            logger.warn("findAllByPazienteId: account non trovato per id={}", accountId);
+            return Collections.emptyList();
+        }
+        Account account = accountOptional.get();
+        if (account.getRuolo() != ERuolo.PAZIENTE) {
+            logger.warn("findAllByPazienteId: account id={} non è PAZIENTE (ruolo={})", accountId, account.getRuolo());
+            return Collections.emptyList();
+        }
+        Paziente paziente = pazienteService.findByAccountId(account.getId());
+        List<RichiestaMedica> list = richiestaMedicaRepository.findAllByPaziente_IdOrderByDataEmissioneDesc(paziente.getId());
+        logger.info("findAllByPazienteId: accountId={}, pazienteId={}, richieste={}", accountId, paziente.getId(), list.size());
+        return list;
+    }
+
+    /** Restituisce tutte le richieste del medico curante attualmente autenticato, con dati paziente per la dashboard. */
+    public List<RichiestaMedicaMedicoResponse> findAllByMedicoCuranteId()
+    {
+        Long accountId = SecurityUtils.getCurrentAccountId();
+        Optional<Account> accountOptional = accountService.findById(accountId);
+        if (accountOptional.isEmpty() || accountOptional.get().getRuolo() != ERuolo.MEDICO_CURANTE)
+            return Collections.emptyList();
+        MedicoCurante medico = medicoCuranteService.findByAccountId(accountOptional.get().getId());
+        List<RichiestaMedica> list = richiestaMedicaRepository.findAllByMedicoCurante_IdOrderByDataEmissioneDesc(medico.getId());
+        List<RichiestaMedicaMedicoResponse> result = new ArrayList<>();
+        for (RichiestaMedica r : list) {
+            RichiestaMedicaMedicoResponse dto = new RichiestaMedicaMedicoResponse();
+            dto.setId(r.getId());
+            dto.setDataEmissione(r.getDataEmissione());
+            dto.setTipoRichiesta(r.getTipoRichiesta() != null ? r.getTipoRichiesta().name() : null);
+            dto.setStato(r.getStato() != null ? r.getStato().name() : null);
+            dto.setDescrizione(r.getDescrizione());
+            if (r.getPaziente() != null) {
+                dto.setPazienteId(r.getPaziente().getId());
+                dto.setPazienteNome(r.getPaziente().getNome());
+                dto.setPazienteCognome(r.getPaziente().getCognome());
+            }
+            result.add(dto);
+        }
+        return result;
     }
 
     public String visualizzaRichiestaMedica(Long id)
@@ -129,24 +190,14 @@ public class RichiestaMedicaService
      * fixedRate fa partire il metodo ogni intervallo di tempo a prescindere dal tempo di esecuzione
      * (può partire anche se la precedente esecuzione non è ancora finita).
      */
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
     public void aggiornaStatiScaduti() {
-        List<RichiestaMedica> richiesteAccettate = richiestaMedicaRepository.findAllByStato(EStatoRichiesta.ACCETTATA);
 
-        for (RichiestaMedica richiesta : richiesteAccettate) {
-            if (richiesta.getDataAccettazione() != null) {
-                long minutiTrascorsi = Duration.between(
-                        richiesta.getDataAccettazione().toInstant(),
-                        Instant.now()
-                ).toMinutes();
+        Instant limite = Instant.now().minus(30, ChronoUnit.DAYS);
 
-                if (minutiTrascorsi >= 1) { // per test, 1 minuto
-                    richiesta.setStato(EStatoRichiesta.SCADUTA);
-                    richiestaMedicaRepository.save(richiesta);
-                    logger.info("Richiesta {} scaduta automaticamente.", richiesta.getId());
-                }
-            }
-        }
+        int aggiornate = richiestaMedicaRepository.scadutaRichieste(limite);
+
+        logger.info("{} richieste scadute automaticamente.", aggiornate);
     }
 }

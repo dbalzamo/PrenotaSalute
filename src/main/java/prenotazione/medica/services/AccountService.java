@@ -24,6 +24,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Servizio per la gestione degli account: login, logout, registrazione e validazione.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> invocato da {@link prenotazione.medica.controller.AuthController}
+ * per login (genera JWT e cookie), logout (cookie vuoto) e signup (creazione account + eventuale
+ * associazione medico in signup paziente). Usa {@link AuthenticationManager} per validare
+ * username/password, {@link JwtService} per generare il token e il cookie, {@link AccountRepository}
+ * per persistenza. La creazione del profilo (Paziente o MedicoCurante) dopo la creazione account
+ * è delegata a PazienteService e MedicoCuranteService dal controller.
+ * </p>
+ */
 @Service
 public class AccountService
 {

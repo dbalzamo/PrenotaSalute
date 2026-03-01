@@ -4,6 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO per una prestazione sanitaria associata a un'impegnativa.
+ * <p>
+ * Usato nelle API di dettaglio impegnativa per esporre codice prestazione, descrizione, note e
+ * quantità senza esporre l'entità JPA completa.
+ * </p>
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
