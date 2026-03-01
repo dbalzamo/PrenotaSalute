@@ -82,11 +82,10 @@ public class AccountService
             return new SignupResponse(false,"Email già presente nel sistema!", null);
         }
 
-        // CREAZIONE ACCOUNT UTENTE
         Account account = new Account(request.getUsername(), request.getEmail(), encoder.encode(request.getPassword()), request.getRuolo());
         accountRepository.save(account);
 
-        return new SignupResponse(true,"Regiatrazione avvenuta con successo!", account);
+        return new SignupResponse(true, "Registrazione avvenuta con successo!", account);
     }
 
 

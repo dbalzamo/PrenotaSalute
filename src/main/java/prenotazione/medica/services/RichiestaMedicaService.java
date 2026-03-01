@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import prenotazione.medica.controller.AuthController;
 import prenotazione.medica.dto.request.RichiestaMedicaRequest;
 import prenotazione.medica.dto.request.RifiutoRichiestaRequest;
 import prenotazione.medica.dto.response.RichiestaMedicaMedicoResponse;
@@ -21,7 +20,6 @@ import prenotazione.medica.model.RichiestaMedica;
 import prenotazione.medica.repository.RichiestaMedicaRepository;
 import prenotazione.medica.security.utils.SecurityUtils;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -40,7 +38,7 @@ import java.util.*;
 @Service
 public class RichiestaMedicaService
 {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactory.getLogger(RichiestaMedicaService.class);
 
     @Autowired
     private RichiestaMedicaRepository richiestaMedicaRepository;
@@ -54,11 +52,6 @@ public class RichiestaMedicaService
     @Autowired
     private MedicoCuranteService medicoCuranteService;
 
-
-    public RichiestaMedica findById(Long idRichiestaMedica)
-    {
-        return Optional.of(richiestaMedicaRepository.findById(idRichiestaMedica)).get().orElseThrow(() -> new RuntimeException("ERRORE: Richiesta medica non trovata con ID: " + idRichiestaMedica));
-    }
 
     public String creaRichiestaMedica(RichiestaMedicaRequest request)
     {
@@ -83,7 +76,7 @@ public class RichiestaMedicaService
 
         if (accountOptional.isPresent())
         {
-            Account accountUtente = accountOptional.get(); // Estrazione dell'account dall'optional
+            Account accountUtente = accountOptional.get();
 
             if (accountUtente.getRuolo() == ERuolo.PAZIENTE)
             {

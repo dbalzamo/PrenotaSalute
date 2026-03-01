@@ -1,7 +1,6 @@
 package prenotazione.medica.services;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.dto.request.SignupRequest;
 import prenotazione.medica.dto.response.SignupResponse;
@@ -14,8 +13,9 @@ import prenotazione.medica.repository.MedicoCuranteRepository;
 import prenotazione.medica.repository.PazienteRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Servizio per la gestione dei medici curanti: ricerca per id/account, creazione in signup,
@@ -27,24 +27,24 @@ import java.util.stream.Collectors;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class MedicoCuranteService
 {
-    @Autowired
-    private MedicoCuranteRepository medicoCuranteRepository;
-    @Autowired
-    private PazienteRepository pazienteRepository;
-    @Autowired
-    ModelMapper modelMapper;
+    private final MedicoCuranteRepository medicoCuranteRepository;
+    private final PazienteRepository pazienteRepository;
+    private final ModelMapper modelMapper;
 
 
     public MedicoCurante findById(Long medicoCuranteId)
     {
-        return Optional.of(medicoCuranteRepository.findById(medicoCuranteId)).get().orElseThrow(() -> new RuntimeException("ERRORE: Medico curante non trovato."));
+        return medicoCuranteRepository.findById(medicoCuranteId)
+                .orElseThrow(() -> new RuntimeException("ERRORE: Medico curante non trovato."));
     }
 
     public MedicoCurante findByAccountId(Long accountId)
     {
-        return Optional.of(medicoCuranteRepository.findByAccountId(accountId)).get().orElseThrow(() -> new RuntimeException("ERRORE: Medico curante non associato a nessun ID account: " + accountId));
+        return medicoCuranteRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new RuntimeException("ERRORE: Medico curante non associato a nessun ID account: " + accountId));
     }
 
     public SignupResponse creazioneMedicoCurante(SignupRequest request, Account account)

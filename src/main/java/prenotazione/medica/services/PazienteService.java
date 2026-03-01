@@ -1,8 +1,6 @@
 package prenotazione.medica.services;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import prenotazione.medica.dto.PazienteDTO;
@@ -18,8 +16,9 @@ import prenotazione.medica.repository.PazienteRepository;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Servizio per la gestione dei pazienti: ricerca per account, creazione in signup, profilo,
@@ -30,18 +29,17 @@ import java.util.Optional;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class PazienteService
 {
-    @Autowired
-    private PazienteRepository pazienteRepository;
-    @Autowired
-    private MedicoCuranteRepository medicoCuranteRepository;
-    @Autowired
-    ModelMapper modelMapper;
+    private final PazienteRepository pazienteRepository;
+    private final MedicoCuranteRepository medicoCuranteRepository;
+    private final ModelMapper modelMapper;
 
     public Paziente findByAccountId(Long accountId)
     {
-        return Optional.ofNullable(pazienteRepository.findByAccountId(accountId)).get().orElseThrow(() -> new RuntimeException("ERRORE: Paziente non associato a nessun ID account: " + accountId));
+        return pazienteRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new RuntimeException("ERRORE: Paziente non associato a nessun ID account: " + accountId));
     }
 
 
@@ -59,11 +57,6 @@ public class PazienteService
         pazienteRepository.save(paziente);
 
         return new SignupResponse(true, "Paziente registrato nel sistema.", null);
-    }
-
-    public Paziente findById(Long id)
-    {
-        return Optional.of(pazienteRepository.findById(id)).get().orElseThrow(() -> new RuntimeException("ERRORE: Paziente non trovato con ID: " + id));
     }
 
     /**
@@ -92,15 +85,6 @@ public class PazienteService
         } catch (ParseException e) {
             throw new IllegalArgumentException("Data di nascita non valida: " + dataDiNascita);
         }
-    }
-
-    /**
-     * Restituisce il medico curante associato al paziente loggato (accountId).
-     * Ritorna null se il paziente non ha un medico assegnato.
-     */
-    public MedicoCurante getMedicoCuranteByPazienteAccountId(Long accountId) {
-        Paziente p = findByAccountId(accountId);
-        return p.getMedicoCurante();
     }
 
     /**
@@ -134,10 +118,5 @@ public class PazienteService
                 .orElseThrow(() -> new RuntimeException("Medico curante non trovato: " + medicoCuranteId));
         p.setMedicoCurante(medico);
         pazienteRepository.save(p);
-    }
-
-    /** Pazienti associati a un medico curante (per messaggistica / lista pazienti). */
-    public List<Paziente> findPazientiByMedicoCuranteId(Long medicoCuranteId) {
-        return pazienteRepository.findByMedicoCurante_Id(medicoCuranteId);
     }
 }

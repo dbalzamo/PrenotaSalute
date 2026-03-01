@@ -74,11 +74,6 @@ public class PazienteController
         return ResponseEntity.ok("Medico curante associato.");
     }
 
-    @GetMapping("/findBy/{id}")
-    public Paziente findByIdPaziente(@PathVariable("id") Long idPaziente) {
-        return pazienteService.findById(idPaziente);
-    }
-
     @PutMapping("/updatePaziente")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
     public ResponseEntity<String> updatePaziente(@RequestBody PazienteDTO pazienteDTO) {

@@ -1,18 +1,15 @@
 package prenotazione.medica.services;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.dto.request.ImpegnativaRequest;
-import prenotazione.medica.dto.response.ImpegnativaResponse;
 import prenotazione.medica.enums.EStatoRichiesta;
 import prenotazione.medica.model.Impegnativa;
-import prenotazione.medica.model.Paziente;
 import prenotazione.medica.model.PrestazioneSanitaria;
 import prenotazione.medica.model.RichiestaMedica;
 import prenotazione.medica.repository.ImpegnativaRepository;
 
-import java.util.Date;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Servizio per la generazione di impegnative a partire da richieste mediche accettate.
@@ -23,17 +20,12 @@ import java.util.Date;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class ImpegnativaService
 {
-    @Autowired
-    private ImpegnativaRepository impegnativaRepository;
-    @Autowired
-    private RichiestaMedicaService richiestaMedicaService;
-    @Autowired
-    private PazienteService pazienteService;
-    @Autowired
-    private ModelMapper modelMapper;
-
+    private final ImpegnativaRepository impegnativaRepository;
+    private final RichiestaMedicaService richiestaMedicaService;
+    private final ModelMapper modelMapper;
 
     public String generaImpegnativa(ImpegnativaRequest request)
     {
@@ -45,7 +37,6 @@ public class ImpegnativaService
 
         RichiestaMedica richiestaMedica = richiestaMedicaService.accettaRichiestaMedica(request.getIdRichiestaMedica()).get();
 
-        // COMPILO I DATI DELL'IMPEGNATIVA
         impegnativa.setRegione(richiestaMedica.getPaziente().getIndirizzoDiResidenza());
         impegnativa.setCodiceNRE("0900A" + System.currentTimeMillis() % 1000000000L);
         impegnativa.setTipoRicetta(richiestaMedica.getTipoRichiesta());
