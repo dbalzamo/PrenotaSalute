@@ -83,10 +83,11 @@ Tutti estendono `JpaRepository<Entità, Long>` e sono documentati con il proprio
 |------------|--------|
 | **AuthController** | POST login, logout, signup; GET medici-curanti. |
 | **ChatController** | WebSocket `/app/chat.send`; REST /api/messages (invia, conversazione, read, unread/count). |
-| **MedicoCuranteController** | GET /api/medico/me, /pazienti, /conversazioni. |
-| **PazienteController** | GET /api/paziente/me, /mio-medico; PUT /api/paziente/mio-medico. |
-| **RichiestaMedicaController** | Tutti gli endpoint /api/richieste-mediche (crea, elenchi, visualizza, accetta, rifiuta). |
-| **ImpegnativaController** | POST /api/impegnative/genera-impegnativa. |
+| **MedicoCuranteController** | CRUD /api/v1/medici-curanti; GET /me, /pazienti, /conversazioni. |
+| **PazienteController** | CRUD /api/v1/pazienti; GET /me, /mio-medico; PUT /mio-medico, /updatePaziente. |
+| **RichiestaMedicaController** | CRUD /api/v1/richieste-mediche; crea-richiesta, mie-richieste, medico/richieste, trova-richiesta, visualizza, accetta, rifiuta. |
+| **ImpegnativaController** | CRUD /api/v1/impegnative; POST /genera-impegnativa. |
+| **PrestazioneSanitariaController** | CRUD /api/v1/prestazioni-sanitarie. |
 
 ---
 

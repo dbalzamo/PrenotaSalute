@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 /**
  * DTO per una voce dell'elenco pazienti del medico (messaggistica e selezione conversazione).
  * <p>
- * Restituito da GET {@code /api/medico/pazienti}. Usato per popolare la lista chat e per passare
+ * Restituito da GET {@code /api/v1/medici-curanti/pazienti}. Usato per popolare la lista chat e per passare
  * l'{@code accountId} necessario a inviare messaggi (WebSocket/REST) e a caricare la conversazione.
  * </p>
  *

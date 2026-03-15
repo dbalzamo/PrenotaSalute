@@ -1,57 +1,107 @@
 package prenotazione.medica.services;
 
+import com.prenotasalute.commons.service.AbstractGenericService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import prenotazione.medica.dto.RichiestaMedicaDTO;
 import prenotazione.medica.dto.request.RichiestaMedicaRequest;
 import prenotazione.medica.dto.request.RifiutoRichiestaRequest;
 import prenotazione.medica.dto.response.RichiestaMedicaMedicoResponse;
 import prenotazione.medica.enums.ERuolo;
 import prenotazione.medica.enums.EStatoRichiesta;
 import prenotazione.medica.enums.ETipoRichiesta;
+import prenotazione.medica.mapper.RichiestaMedicaMapper;
 import prenotazione.medica.model.Account;
 import prenotazione.medica.model.MedicoCurante;
 import prenotazione.medica.model.Paziente;
 import prenotazione.medica.model.RichiestaMedica;
+import prenotazione.medica.repository.MedicoCuranteRepository;
+import prenotazione.medica.repository.PazienteRepository;
 import prenotazione.medica.repository.RichiestaMedicaRepository;
+import prenotazione.medica.exception.ResourceNotFoundException;
 import prenotazione.medica.security.utils.SecurityUtils;
+import prenotazione.medica.services.I18nMessageService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
- * Servizio per il ciclo di vita delle richieste mediche: creazione, visualizzazione, accettazione,
- * rifiuto e job di scadenza.
+ * Servizio per il ciclo di vita delle richieste mediche: CRUD generico (commons), creazione da
+ * dashboard, visualizzazione, accettazione, rifiuto e job di scadenza.
  * <p>
  * <b>Ruolo nell'architettura:</b> invocato da {@link prenotazione.medica.controller.RichiestaMedicaController} per tutti gli
- * endpoint /api/richieste-mediche. Gestisce transizioni di stato ({@link EStatoRichiesta}),
+ * endpoint /api/v1/richieste-mediche. Gestisce transizioni di stato ({@link EStatoRichiesta}),
  * filtri per paziente/medico e stato, e uno job {@link Scheduled} che marca come SCADUTA le
  * richieste accettate oltre un limite temporale. Fornisce anche i dati per le notifiche in
  * dashboard (conteggi per stato).
  * </p>
  */
 @Service
-public class RichiestaMedicaService
-{
+public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedica, RichiestaMedicaDTO, Long> {
+
     private static final Logger logger = LoggerFactory.getLogger(RichiestaMedicaService.class);
 
-    @Autowired
-    private RichiestaMedicaRepository richiestaMedicaRepository;
-    @Autowired
-    private ModelMapper modelMapper;
+    private final RichiestaMedicaRepository richiestaMedicaRepository;
+    private final ModelMapper modelMapper;
+    private final AccountService accountService;
+    private final PazienteService pazienteService;
+    private final MedicoCuranteService medicoCuranteService;
+    private final PazienteRepository pazienteRepository;
+    private final MedicoCuranteRepository medicoCuranteRepository;
+    private final I18nMessageService i18n;
 
-    @Autowired
-    private AccountService accountService;
-    @Autowired
-    private PazienteService pazienteService;
-    @Autowired
-    private MedicoCuranteService medicoCuranteService;
+    public RichiestaMedicaService(RichiestaMedicaRepository richiestaMedicaRepository,
+                                  RichiestaMedicaMapper richiestaMedicaMapper,
+                                  ModelMapper modelMapper,
+                                  AccountService accountService,
+                                  PazienteService pazienteService,
+                                  MedicoCuranteService medicoCuranteService,
+                                  PazienteRepository pazienteRepository,
+                                  MedicoCuranteRepository medicoCuranteRepository,
+                                  I18nMessageService i18n) {
+        super(richiestaMedicaRepository, richiestaMedicaMapper);
+        this.richiestaMedicaRepository = richiestaMedicaRepository;
+        this.modelMapper = modelMapper;
+        this.accountService = accountService;
+        this.pazienteService = pazienteService;
+        this.medicoCuranteService = medicoCuranteService;
+        this.pazienteRepository = pazienteRepository;
+        this.medicoCuranteRepository = medicoCuranteRepository;
+        this.i18n = i18n;
+    }
 
+    @Override
+    public RichiestaMedicaDTO create(RichiestaMedicaDTO dto) {
+        RichiestaMedica entity = mapper.toEntity(dto);
+        if (dto.getIdPaziente() != null) {
+            entity.setPaziente(pazienteRepository.getReferenceById(dto.getIdPaziente()));
+        }
+        if (dto.getIdMedicoCurante() != null) {
+            entity.setMedicoCurante(medicoCuranteRepository.getReferenceById(dto.getIdMedicoCurante()));
+        }
+        RichiestaMedica saved = richiestaMedicaRepository.save(entity);
+        return mapper.toDTO(saved);
+    }
+
+    @Override
+    public RichiestaMedicaDTO update(Long id, RichiestaMedicaDTO dto) {
+        RichiestaMedica entity = richiestaMedicaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("richiesta.notfound", id));
+        mapper.updateEntityFromDTO(dto, entity);
+        if (dto.getIdPaziente() != null) {
+            entity.setPaziente(pazienteRepository.getReferenceById(dto.getIdPaziente()));
+        }
+        if (dto.getIdMedicoCurante() != null) {
+            entity.setMedicoCurante(medicoCuranteRepository.getReferenceById(dto.getIdMedicoCurante()));
+        }
+        RichiestaMedica saved = richiestaMedicaRepository.save(entity);
+        return mapper.toDTO(saved);
+    }
 
     public String creaRichiestaMedica(RichiestaMedicaRequest request)
     {
@@ -65,7 +115,7 @@ public class RichiestaMedicaService
         richiestaMedica.setStato(EStatoRichiesta.INVIATA);
 
         richiestaMedicaRepository.save(richiestaMedica);
-        return "Richiesta creata con successo";
+        return i18n.getMessage("richiesta.created");
     }
 
 
@@ -148,9 +198,9 @@ public class RichiestaMedicaService
         if (richiestaMedica.isPresent()){
             richiestaMedica.get().setStato(EStatoRichiesta.VISUALIZZATA);
             richiestaMedicaRepository.save(richiestaMedica.get());
-            return "Richiesta ID: " + id + " visualizzata!";
+            return i18n.getMessage("richiesta.viewed", id);
         }
-        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + id);
+        throw new ResourceNotFoundException("richiesta.notfound", id);
     }
 
     public String rifiutaRichiestaMedica(RifiutoRichiestaRequest rifiutoRichiestaRequest)
@@ -161,9 +211,9 @@ public class RichiestaMedicaService
             richiestaMedica.get().setStato(EStatoRichiesta.RIFIUTATA);
             richiestaMedica.get().setDescrizione(rifiutoRichiestaRequest.getMotivazione());
             richiestaMedicaRepository.save(richiestaMedica.get());
-            return "Richiesta ID: " + rifiutoRichiestaRequest.getIdRichiesta() + " rifiutata: '" + rifiutoRichiestaRequest.getMotivazione() + "'";
+            return i18n.getMessage("richiesta.refused", rifiutoRichiestaRequest.getIdRichiesta(), rifiutoRichiestaRequest.getMotivazione());
         }
-        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + rifiutoRichiestaRequest.getIdRichiesta());
+        throw new ResourceNotFoundException("richiesta.notfound", rifiutoRichiestaRequest.getIdRichiesta());
     }
 
     public Optional<RichiestaMedica> accettaRichiestaMedica(Long idRichiestaMedica)
@@ -176,7 +226,7 @@ public class RichiestaMedicaService
             richiestaMedicaRepository.save(richiestaMedica.get());
             return richiestaMedica;
         }
-        throw new RuntimeException("ERRORE: richiesta selezionata non è presente nel sistema con ID: " + idRichiestaMedica);
+        throw new ResourceNotFoundException("richiesta.notfound", idRichiestaMedica);
     }
 
     /***

@@ -1,5 +1,6 @@
 package prenotazione.medica.model;
 
+import com.prenotasalute.commons.entity.EntityBase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,11 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PrestazioneSanitaria
-{
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+public class PrestazioneSanitaria extends EntityBase {
 
     @Column(name = "codice_prestazione", unique = true, nullable = false)
     private Long codicePrestazione;

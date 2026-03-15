@@ -2,6 +2,7 @@ package prenotazione.medica.security.utils;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import prenotazione.medica.exception.UnauthorizedException;
 import prenotazione.medica.model.UserDetailsImpl;
 
 /**
@@ -30,7 +31,7 @@ public class SecurityUtils
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Account non autenticato");
+            throw new UnauthorizedException("account.notauthenticated");
         }
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();

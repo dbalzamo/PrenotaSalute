@@ -1,18 +1,22 @@
 package prenotazione.medica.services;
 
+import com.prenotasalute.commons.service.AbstractGenericService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import prenotazione.medica.dto.ImpegnativaDTO;
 import prenotazione.medica.dto.request.ImpegnativaRequest;
-import prenotazione.medica.enums.EStatoRichiesta;
+import prenotazione.medica.mapper.ImpegnativaMapper;
 import prenotazione.medica.model.Impegnativa;
 import prenotazione.medica.model.PrestazioneSanitaria;
 import prenotazione.medica.model.RichiestaMedica;
 import prenotazione.medica.repository.ImpegnativaRepository;
-
-import lombok.RequiredArgsConstructor;
+import prenotazione.medica.repository.MedicoCuranteRepository;
+import prenotazione.medica.exception.ResourceNotFoundException;
+import prenotazione.medica.repository.PazienteRepository;
+import prenotazione.medica.services.I18nMessageService;
 
 /**
- * Servizio per la generazione di impegnative a partire da richieste mediche accettate.
+ * Servizio per Impegnativa: CRUD generico (commons) e generazione da richiesta medica.
  * <p>
  * <b>Ruolo nell'architettura:</b> invocato da {@link prenotazione.medica.controller.ImpegnativaController} (POST genera-impegnativa).
  * Recupera la richiesta medica, la accetta se non già accettata, crea Impegnativa e
@@ -20,12 +24,58 @@ import lombok.RequiredArgsConstructor;
  * </p>
  */
 @Service
-@RequiredArgsConstructor
-public class ImpegnativaService
-{
+public class ImpegnativaService extends AbstractGenericService<Impegnativa, ImpegnativaDTO, Long> {
+
     private final ImpegnativaRepository impegnativaRepository;
     private final RichiestaMedicaService richiestaMedicaService;
+    private final PazienteRepository pazienteRepository;
+    private final MedicoCuranteRepository medicoCuranteRepository;
     private final ModelMapper modelMapper;
+    private final I18nMessageService i18n;
+
+    public ImpegnativaService(ImpegnativaRepository impegnativaRepository,
+                              ImpegnativaMapper impegnativaMapper,
+                              RichiestaMedicaService richiestaMedicaService,
+                              PazienteRepository pazienteRepository,
+                              MedicoCuranteRepository medicoCuranteRepository,
+                              ModelMapper modelMapper,
+                              I18nMessageService i18n) {
+        super(impegnativaRepository, impegnativaMapper);
+        this.impegnativaRepository = impegnativaRepository;
+        this.richiestaMedicaService = richiestaMedicaService;
+        this.pazienteRepository = pazienteRepository;
+        this.medicoCuranteRepository = medicoCuranteRepository;
+        this.modelMapper = modelMapper;
+        this.i18n = i18n;
+    }
+
+    @Override
+    public ImpegnativaDTO create(ImpegnativaDTO dto) {
+        Impegnativa entity = mapper.toEntity(dto);
+        if (dto.getIdPaziente() != null) {
+            entity.setPaziente(pazienteRepository.getReferenceById(dto.getIdPaziente()));
+        }
+        if (dto.getIdMedicoCurante() != null) {
+            entity.setMedicoCurante(medicoCuranteRepository.getReferenceById(dto.getIdMedicoCurante()));
+        }
+        Impegnativa saved = impegnativaRepository.save(entity);
+        return mapper.toDTO(saved);
+    }
+
+    @Override
+    public ImpegnativaDTO update(Long id, ImpegnativaDTO dto) {
+        Impegnativa entity = impegnativaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("impegnativa.notfound", id));
+        mapper.updateEntityFromDTO(dto, entity);
+        if (dto.getIdPaziente() != null) {
+            entity.setPaziente(pazienteRepository.getReferenceById(dto.getIdPaziente()));
+        }
+        if (dto.getIdMedicoCurante() != null) {
+            entity.setMedicoCurante(medicoCuranteRepository.getReferenceById(dto.getIdMedicoCurante()));
+        }
+        Impegnativa saved = impegnativaRepository.save(entity);
+        return mapper.toDTO(saved);
+    }
 
     public String generaImpegnativa(ImpegnativaRequest request)
     {
@@ -51,7 +101,7 @@ public class ImpegnativaService
 
         impegnativaRepository.save(impegnativa);
 
-        return "Impegnativa generata con successo!";
+        return i18n.getMessage("impegnativa.generated");
     }
 
 }

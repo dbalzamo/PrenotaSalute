@@ -1,22 +1,25 @@
 package prenotazione.medica.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * Richiesta di login (credenziali).
- * <p>
- * Body di POST {@code /api/auth/login}. Usato da {@link prenotazione.medica.controller.AuthController}
- * per invocare l'autenticazione e restituire il JWT e i dati utente ({@link prenotazione.medica.dto.response.AuthResponse}).
- * </p>
+ * Body di POST {@code /api/auth/login}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthRequest {
 
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 1, max = 50, message = "{validation.size}")
     private String username;
-    private String password;
 
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 1, max = 255, message = "{validation.size}")
+    private String password;
 }

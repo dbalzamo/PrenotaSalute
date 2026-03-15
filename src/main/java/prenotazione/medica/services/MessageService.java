@@ -122,7 +122,7 @@ public class MessageService
 
     /**
      * Anteprima conversazioni per il medico: per ogni paziente restituisce ultimo messaggio (snippet),
-     * data/ora e conteggio non letti. Usato da GET /api/medico/conversazioni per la lista chat.
+     * data/ora e conteggio non letti. Usato da GET /api/v1/medici-curanti/conversazioni per la lista chat.
      */
     public List<ConversazionePreviewDTO> getConversationPreviewsForMedico(Long medicoAccountId) {
         List<PazientePerMessaggioDTO> pazienti =

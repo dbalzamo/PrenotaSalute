@@ -50,8 +50,7 @@ public class WebSecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		// Path può arrivare con o senza context-path a seconda del dispatcher
 		String apiAuth = contextPath + "/api/auth/**";
-		String apiRichieste = contextPath + "/api/richieste-mediche/**";
-		String apiMedico = contextPath + "/api/medico/**";
+		String apiV1 = contextPath + "/api/v1/**";
 		http.csrf(csrf -> csrf.disable())
 				.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -59,8 +58,7 @@ public class WebSecurityConfig {
 						auth.requestMatchers("/error", contextPath + "/error").permitAll()
 								.requestMatchers("/api/auth/**", apiAuth).permitAll()
 								.requestMatchers(contextPath + "/ws/**", "/ws/**").permitAll()
-								.requestMatchers("/api/richieste-mediche/**", apiRichieste).authenticated()
-								.requestMatchers("/api/medico/**", apiMedico).authenticated()
+								.requestMatchers("/api/v1/**", apiV1).authenticated()
 								.anyRequest().authenticated());
 		http.authenticationProvider(authenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

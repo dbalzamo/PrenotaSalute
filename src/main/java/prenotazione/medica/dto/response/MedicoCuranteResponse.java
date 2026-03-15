@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Risposta per GET {@code /api/paziente/mio-medico}: dati del medico curante associato al paziente.
+ * Risposta per GET {@code /api/v1/pazienti/mio-medico}: dati del medico curante associato al paziente.
  * <p>
  * Espone id, nome, cognome e un blocco {@link AccountInfo} con id account, username ed email, così
  * il frontend può usare l'id account per messaggistica (WebSocket/REST) senza caricare l'entità

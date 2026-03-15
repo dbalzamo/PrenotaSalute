@@ -1,5 +1,6 @@
 package prenotazione.medica.model;
 
+import com.prenotasalute.commons.entity.EntityBase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,11 +26,7 @@ import prenotazione.medica.enums.ETipoRichiesta;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Impegnativa {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
+public class Impegnativa extends EntityBase {
 
 	@Column(name = "regione", length = 50, nullable = false)
 	private String regione;

@@ -1,5 +1,6 @@
 package prenotazione.medica.services;
 
+import com.prenotasalute.commons.service.AbstractGenericService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,11 +8,15 @@ import prenotazione.medica.dto.PazienteDTO;
 import prenotazione.medica.dto.request.SignupRequest;
 import prenotazione.medica.dto.response.SignupResponse;
 import prenotazione.medica.dto.response.MedicoCuranteResponse;
+import prenotazione.medica.mapper.PazienteMapper;
 import prenotazione.medica.model.Account;
 import prenotazione.medica.model.MedicoCurante;
 import prenotazione.medica.model.Paziente;
 import prenotazione.medica.repository.MedicoCuranteRepository;
+import prenotazione.medica.exception.BadRequestException;
+import prenotazione.medica.exception.ResourceNotFoundException;
 import prenotazione.medica.repository.PazienteRepository;
+import prenotazione.medica.services.I18nMessageService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,17 +34,39 @@ import lombok.RequiredArgsConstructor;
  * </p>
  */
 @Service
-@RequiredArgsConstructor
-public class PazienteService
-{
+public class PazienteService extends AbstractGenericService<Paziente, PazienteDTO, Long> {
+
     private final PazienteRepository pazienteRepository;
     private final MedicoCuranteRepository medicoCuranteRepository;
     private final ModelMapper modelMapper;
+    private final I18nMessageService i18n;
 
-    public Paziente findByAccountId(Long accountId)
-    {
+    /**
+     * Costruttore che collega il repository e il mapper generico alla superclasse commons
+     * e inizializza le dipendenze specifiche di questo servizio.
+     */
+    public PazienteService(PazienteRepository pazienteRepository,
+                           MedicoCuranteRepository medicoCuranteRepository,
+                           PazienteMapper pazienteMapper,
+                           ModelMapper modelMapper,
+                           I18nMessageService i18n) {
+        super(pazienteRepository, pazienteMapper);
+        this.pazienteRepository = pazienteRepository;
+        this.medicoCuranteRepository = medicoCuranteRepository;
+        this.modelMapper = modelMapper;
+        this.i18n = i18n;
+    }
+
+    public Paziente findByAccountId(Long accountId) {
         return pazienteRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new RuntimeException("ERRORE: Paziente non associato a nessun ID account: " + accountId));
+                .orElseThrow(() -> new ResourceNotFoundException("paziente.notfound.account", accountId));
+    }
+
+    /**
+     * Restituisce il paziente associato all'account come DTO (per endpoint /me).
+     */
+    public PazienteDTO findByAccountIdAsDto(Long accountId) {
+        return mapper.toDTO(findByAccountId(accountId));
     }
 
 
@@ -56,7 +83,7 @@ public class PazienteService
         }
         pazienteRepository.save(paziente);
 
-        return new SignupResponse(true, "Paziente registrato nel sistema.", null);
+        return new SignupResponse(true, i18n.getMessage("paziente.registered"), null);
     }
 
     /**
@@ -70,21 +97,21 @@ public class PazienteService
         existing.setCodiceFiscale(pazienteDTO.getCodiceFiscale());
         existing.setIndirizzoDiResidenza(pazienteDTO.getIndirizzoDiResidenza());
         if (pazienteDTO.getDataDiNascita() != null && !pazienteDTO.getDataDiNascita().isEmpty()) {
-            existing.setDataDiNascita(parseDataDiNascita(pazienteDTO.getDataDiNascita()));
+            try {
+                existing.setDataDiNascita(parseDataDiNascita(pazienteDTO.getDataDiNascita()));
+            } catch (ParseException e) {
+                throw new BadRequestException("paziente.birthdate.invalid", pazienteDTO.getDataDiNascita());
+            }
         }
         if (existing.getAccount() != null && pazienteDTO.getEmail() != null) {
             existing.getAccount().setEmail(pazienteDTO.getEmail());
         }
         pazienteRepository.save(existing);
-        return "Paziente modificato con successo nel sistema.";
+        return i18n.getMessage("paziente.updated");
     }
 
-    private static Date parseDataDiNascita(String dataDiNascita) {
-        try {
-            return new SimpleDateFormat("yyyy-MM-dd").parse(dataDiNascita);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Data di nascita non valida: " + dataDiNascita);
-        }
+    private static Date parseDataDiNascita(String dataDiNascita) throws ParseException {
+        return new SimpleDateFormat("yyyy-MM-dd").parse(dataDiNascita);
     }
 
     /**
@@ -115,7 +142,7 @@ public class PazienteService
     public void setMedicoCurante(Long accountId, Long medicoCuranteId) {
         Paziente p = findByAccountId(accountId);
         MedicoCurante medico = medicoCuranteRepository.findById(medicoCuranteId)
-                .orElseThrow(() -> new RuntimeException("Medico curante non trovato: " + medicoCuranteId));
+                .orElseThrow(() -> new ResourceNotFoundException("medico.notfound"));
         p.setMedicoCurante(medico);
         pazienteRepository.save(p);
     }

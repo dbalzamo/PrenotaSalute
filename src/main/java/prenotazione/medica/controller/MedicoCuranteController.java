@@ -1,13 +1,11 @@
 package prenotazione.medica.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.prenotasalute.commons.controller.GenericController;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import prenotazione.medica.dto.ConversazionePreviewDTO;
+import prenotazione.medica.dto.MedicoCuranteDTO;
 import prenotazione.medica.dto.PazientePerMessaggioDTO;
-import prenotazione.medica.model.MedicoCurante;
 import prenotazione.medica.security.utils.SecurityUtils;
 import prenotazione.medica.services.MedicoCuranteService;
 import prenotazione.medica.services.MessageService;
@@ -15,38 +13,34 @@ import prenotazione.medica.services.MessageService;
 import java.util.List;
 
 /**
- * Controller per le API riservate al medico curante: profilo, elenco pazienti, anteprime conversazioni.
- * <p>
- * <b>Ruolo nell'architettura:</b> GET /api/medico/me, /pazienti, /conversazioni. Tutti i metodi
- * richiedono ruolo MEDICO_CURANTE (@PreAuthorize). L'id account corrente è ottenuto con
- * {@link SecurityUtils#getCurrentAccountId}. La lista chat (anteprime) è fornita da
- * {@link MessageService#getConversationPreviewsForMedico}.
- * </p>
+ * Controller per MedicoCurante: CRUD generico (commons) su /api/v1/medici-curanti e endpoint
+ * specifici per profilo (me), elenco pazienti (pazienti) e anteprime conversazioni (conversazioni).
  */
 @RestController
-@RequestMapping("/api/medico")
-public class MedicoCuranteController
-{
-    @Autowired
-    private MedicoCuranteService medicoCuranteService;
-    @Autowired
-    private MessageService messageService;
+@RequestMapping("/api/v1/medici-curanti")
+public class MedicoCuranteController extends GenericController<MedicoCuranteDTO, Long> {
 
-    /** Restituisce il medico curante associato all'account autenticato (per area personale). */
-    @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
-    public MedicoCurante getCurrentMedicoCurante() {
-        return medicoCuranteService.findByAccountId(SecurityUtils.getCurrentAccountId());
+    private final MedicoCuranteService medicoCuranteService;
+    private final MessageService messageService;
+
+    public MedicoCuranteController(MedicoCuranteService service, MessageService messageService) {
+        super(service);
+        this.medicoCuranteService = service;
+        this.messageService = messageService;
     }
 
-    /** Elenco pazienti del medico (per messaggistica). */
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
+    public MedicoCuranteDTO getCurrentMedicoCurante() {
+        return medicoCuranteService.findByAccountIdAsDto(SecurityUtils.getCurrentAccountId());
+    }
+
     @GetMapping("/pazienti")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
     public List<PazientePerMessaggioDTO> getPazienti() {
         return medicoCuranteService.findPazientiForMessaging(SecurityUtils.getCurrentAccountId());
     }
 
-    /** Anteprima conversazioni: pazienti con ultimo messaggio, orario e numero non letti (lista chat stile WhatsApp). */
     @GetMapping("/conversazioni")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
     public List<ConversazionePreviewDTO> getConversazioni() {

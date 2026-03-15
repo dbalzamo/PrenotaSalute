@@ -1,46 +1,44 @@
 package prenotazione.medica.controller;
 
+import com.prenotasalute.commons.controller.GenericController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import prenotazione.medica.dto.PazienteDTO;
 import prenotazione.medica.dto.response.MedicoCuranteResponse;
-import prenotazione.medica.model.MedicoCurante;
-import prenotazione.medica.model.Paziente;
 import prenotazione.medica.security.utils.SecurityUtils;
+import prenotazione.medica.services.I18nMessageService;
 import prenotazione.medica.services.PazienteService;
 
 /**
- * Controller per le API riservate al paziente: profilo, medico curante (GET/PUT), area personale.
- * <p>
- * <b>Ruolo nell'architettura:</b> GET /api/paziente/me, /mio-medico, PUT /api/paziente/mio-medico.
- * getMioMedicoCurante e putMioMedicoCurante sono usati dalla Posta e dall'area personale per
- * associare o leggere il medico curante. L'id account corrente è ottenuto con SecurityUtils.
- * </p>
+ * Controller per Paziente: CRUD generico (commons) su /api/v1/pazienti e endpoint specifici
+ * per profilo (me), medico curante (mio-medico) e aggiornamento profilo (updatePaziente).
  */
 @RestController
-@RequestMapping("/api/paziente")
-public class PazienteController
-{
+@RequestMapping("/api/v1/pazienti")
+public class PazienteController extends GenericController<PazienteDTO, Long> {
+
     private static final Logger logger = LoggerFactory.getLogger(PazienteController.class);
 
-    @Autowired
-    private PazienteService pazienteService;
+    private final PazienteService pazienteService;
+    private final I18nMessageService i18n;
 
-    /** Restituisce il paziente associato all'account attualmente autenticato (per profilo). */
-    @GetMapping("/me")
-    public Paziente getCurrentPaziente() {
-        return pazienteService.findByAccountId(SecurityUtils.getCurrentAccountId());
+    public PazienteController(PazienteService service, I18nMessageService i18n) {
+        super(service);
+        this.pazienteService = service;
+        this.i18n = i18n;
     }
 
-    /**
-     * Restituisce il medico curante associato al paziente loggato (per Posta / messaggistica).
-     * 404 se il paziente non ha un medico assegnato o l'account non è un paziente.
-     */
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('PAZIENTE')")
+    public PazienteDTO getCurrentPaziente() {
+        return pazienteService.findByAccountIdAsDto(SecurityUtils.getCurrentAccountId());
+    }
+
     @GetMapping("/mio-medico")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
     public ResponseEntity<MedicoCuranteResponse> getMioMedicoCurante() {
@@ -60,23 +58,20 @@ public class PazienteController
         }
     }
 
-    /**
-     * Associa il medico curante al paziente loggato. Body: { "medicoCuranteId": number }
-     */
     @PutMapping("/mio-medico")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
     public ResponseEntity<String> setMioMedicoCurante(@RequestBody java.util.Map<String, Long> body) {
         Long medicoCuranteId = body != null ? body.get("medicoCuranteId") : null;
         if (medicoCuranteId == null) {
-            return ResponseEntity.badRequest().body("medicoCuranteId obbligatorio");
+            return ResponseEntity.badRequest().body(i18n.getMessage("paziente.medico.required"));
         }
         pazienteService.setMedicoCurante(SecurityUtils.getCurrentAccountId(), medicoCuranteId);
-        return ResponseEntity.ok("Medico curante associato.");
+        return ResponseEntity.ok(i18n.getMessage("paziente.medico.associated"));
     }
 
     @PutMapping("/updatePaziente")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
-    public ResponseEntity<String> updatePaziente(@RequestBody PazienteDTO pazienteDTO) {
+    public ResponseEntity<String> updatePaziente(@RequestBody @Valid PazienteDTO pazienteDTO) {
         Long idAccount = SecurityUtils.getCurrentAccountId();
         return ResponseEntity.status(HttpStatus.OK).body(pazienteService.updatePaziente(idAccount, pazienteDTO));
     }

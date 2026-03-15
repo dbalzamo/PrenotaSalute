@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import prenotazione.medica.dto.MessageDTO;
 import prenotazione.medica.dto.response.MessageResponse;
+import prenotazione.medica.exception.ResourceNotFoundException;
+import prenotazione.medica.exception.UnauthorizedException;
 import prenotazione.medica.repository.AccountRepository;
 import prenotazione.medica.security.utils.SecurityUtils;
 import prenotazione.medica.services.MessageService;
@@ -47,12 +49,12 @@ public class ChatController {
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload MessageDTO messageDTO, Principal principal) {
         if (principal == null || principal.getName() == null) {
-            throw new RuntimeException("Sessione WebSocket non autenticata. Ricollegati alla Posta.");
+            throw new UnauthorizedException("websocket.unauthorized");
         }
         Long currentAccountId = accountRepository
                 .findByUsername(principal.getName())
                 .map(acc -> acc.getId())
-                .orElseThrow(() -> new RuntimeException("Account non trovato per: " + principal.getName()));
+                .orElseThrow(() -> new ResourceNotFoundException("account.notfound.for", principal.getName()));
         messageDTO.setSenderId(currentAccountId);
         messageService.sendMessage(messageDTO);
     }

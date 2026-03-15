@@ -2,26 +2,24 @@ package prenotazione.medica.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Richiesta di rifiuto di una richiesta medica da parte del medico.
- * <p>
- * Body delle API di rifiuto: id della richiesta e motivazione obbligatoria. Validato e processato
- * da {@link prenotazione.medica.controller.RichiestaMedicaController} e
- * {@link prenotazione.medica.services.RichiestaMedicaService}.
- * </p>
+ * Richiesta di rifiuto di una richiesta medica (medico).
+ * Body delle API di rifiuto: id richiesta e motivazione obbligatoria.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RifiutoRichiestaRequest
-{
-    @NotNull
+public class RifiutoRichiestaRequest {
+
+    @NotNull(message = "{validation.required}")
     private Long idRichiesta;
 
-    @NotBlank
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 1, max = 500, message = "{validation.size.range}")
     private String motivazione;
 }

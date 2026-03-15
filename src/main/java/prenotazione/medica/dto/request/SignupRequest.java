@@ -2,53 +2,63 @@ package prenotazione.medica.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import prenotazione.medica.enums.ERuolo;
 
 import java.util.Date;
 
 /**
- * Richiesta di registrazione di un nuovo utente (paziente o medico curante).
- * <p>
- * Body di POST {@code /api/auth/signup}. Contiene credenziali (username, email, password), ruolo,
- * dati anagrafici comuni e, per il medico, la specializzazione. Opzionalmente il paziente può
- * indicare il medico curante da associare. Validato con Bean Validation prima di essere processato
- * da {@link prenotazione.medica.controller.AuthController} e
- * {@link prenotazione.medica.services.AccountService}.
- * </p>
+ * Richiesta di registrazione (paziente o medico curante).
+ * Body di POST {@code /api/auth/signup}. Validato con Bean Validation.
  */
 @Data
-public class SignupRequest
-{
-    @NotBlank
-    @Size(min = 3, max = 50)
+@NoArgsConstructor
+@AllArgsConstructor
+public class SignupRequest {
+
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 3, max = 50, message = "{validation.size.range}")
     private String username;
-    @NotBlank
-    @Email
+
+    @NotBlank(message = "{validation.notblank}")
+    @Email(message = "{validation.email}")
+    @Size(max = 50, message = "{validation.size.max}")
     private String email;
-    @NotBlank
-    @Size(max = 255)
+
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 6, max = 255, message = "{validation.password.size}")
     private String password;
-    @NotBlank
+
+    @NotNull(message = "{validation.required}")
     private ERuolo ruolo;
 
-    // Campi comuni
-    @NotBlank
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 1, max = 20, message = "{validation.size.range}")
     private String nome;
-    @NotBlank
+
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 1, max = 30, message = "{validation.size.range}")
     private String cognome;
-    @NotBlank
-    @Size(max = 16)
+
+    @NotBlank(message = "{validation.notblank}")
+    @Size(min = 16, max = 16, message = "{validation.codicefiscale.size}")
     private String codiceFiscale;
-    @NotBlank
+
+    @NotBlank(message = "{validation.notblank}")
+    @Size(max = 100, message = "{validation.size.max}")
     private String indirizzoDiResidenza;
-    @NotBlank
+
+    @NotNull(message = "{validation.required}")
     private Date dataDiNascita;
 
-    // Campi solo per medico
+    /** Solo per medico curante. */
+    @Size(max = 100, message = "{validation.size.max}")
     private String specializzazione;
 
-    /** Opzionale: id del medico curante da associare al paziente in fase di registrazione. */
+    /** Solo per paziente: id medico curante da associare. */
     private Long medicoCuranteId;
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 /**
  * Anteprima di una conversazione per la lista chat del medico (stile WhatsApp).
  * <p>
- * Restituito da GET {@code /api/medico/conversazioni}. Contiene i dati del paziente, un snippet
+ * Restituito da GET {@code /api/v1/medici-curanti/conversazioni}. Contiene i dati del paziente, un snippet
  * dell'ultimo messaggio, la data/ora e il conteggio messaggi non letti da quel paziente verso il
  * medico. Usato dal frontend per mostrare la sidebar della Posta senza caricare l'intera conversazione.
  * </p>

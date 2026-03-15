@@ -27,7 +27,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private AccountRepository repoUtente;
-
+    @Autowired
+    private I18nMessageService i18n;
 
     /**
      * Carica l'account per username e lo converte in UserDetailsImpl (id, username, password, autorità).
@@ -35,10 +36,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      */
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
-    {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account user = repoUtente.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Account non trovato: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException(i18n.getMessage("account.notfound", username)));
 
         return UserDetailsImpl.build(user);
     }
