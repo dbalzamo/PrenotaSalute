@@ -1,6 +1,8 @@
 package prenotazione.medica.richiestaMedica.api;
 
 import com.prenotasalute.commons.controller.GenericController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import prenotazione.medica.shared.i18n.I18nMessageService;
  */
 @RestController
 @RequestMapping("/api/v1/richieste-mediche")
+@Tag(name = "Richieste mediche", description = "Gestione delle richieste mediche tra paziente e medico curante.")
 public class RichiestaMedicaController extends GenericController<RichiestaMedicaDTO, Long> {
 
     private final RichiestaMedicaService richiestaMedicaService;
@@ -32,24 +35,40 @@ public class RichiestaMedicaController extends GenericController<RichiestaMedica
 
     @PostMapping("/crea-richiesta")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
+    @Operation(
+            summary = "Crea una nuova richiesta medica",
+            description = "Permette al paziente autenticato di creare una nuova richiesta medica verso il proprio medico curante."
+    )
     public ResponseEntity<?> creaRichiestaMedica(@RequestBody @Valid RichiestaMedicaRequest request) {
         return ResponseEntity.ok(richiestaMedicaService.creaRichiestaMedica(request));
     }
 
     @GetMapping("/mie-richieste")
     @PreAuthorize("hasAnyRole('PAZIENTE')")
+    @Operation(
+            summary = "Richieste mediche del paziente",
+            description = "Restituisce tutte le richieste mediche create dal paziente corrente."
+    )
     public ResponseEntity<?> getMieRichieste() {
         return ResponseEntity.ok().body(richiestaMedicaService.findAllByPazienteId());
     }
 
     @GetMapping("/medico/richieste")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
+    @Operation(
+            summary = "Richieste mediche per il medico",
+            description = "Restituisce le richieste mediche assegnate al medico curante corrente."
+    )
     public ResponseEntity<?> getRichiesteMedico() {
         return ResponseEntity.ok().body(richiestaMedicaService.findAllByMedicoCuranteId());
     }
 
     @GetMapping("/trova-richiesta")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE', 'PAZIENTE')")
+    @Operation(
+            summary = "Filtra richieste per stato",
+            description = "Restituisce le richieste mediche del soggetto corrente filtrate per stato (default INVIATA)."
+    )
     public ResponseEntity<?> getRichiestePerStato(@RequestParam(name = "stato", required = false) EStatoRichiesta stato) {
         if (stato == null) {
             stato = EStatoRichiesta.INVIATA;
@@ -59,12 +78,20 @@ public class RichiestaMedicaController extends GenericController<RichiestaMedica
 
     @PutMapping("/visualizza-richiesta/{idRichiestaMedica}")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
+    @Operation(
+            summary = "Segna richiesta come visualizzata",
+            description = "Segna la richiesta indicata come visualizzata dal medico curante."
+    )
     public ResponseEntity<?> visualizzaRichiestaMedica(@PathVariable Long idRichiestaMedica) {
         return ResponseEntity.ok().body(richiestaMedicaService.visualizzaRichiestaMedica(idRichiestaMedica));
     }
 
     @PutMapping("/accetta-richiesta/{idRichiestaMedica}")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
+    @Operation(
+            summary = "Accetta una richiesta medica",
+            description = "Permette al medico curante di accettare la richiesta medica indicata."
+    )
     public ResponseEntity<?> accettaRichiestaMedica(@PathVariable Long idRichiestaMedica) {
         richiestaMedicaService.accettaRichiestaMedica(idRichiestaMedica);
         return ResponseEntity.ok().body(i18n.getMessage("richiesta.accepted"));
@@ -72,6 +99,10 @@ public class RichiestaMedicaController extends GenericController<RichiestaMedica
 
     @PostMapping("/rifiuta-richiesta")
     @PreAuthorize("hasAnyRole('MEDICO_CURANTE')")
+    @Operation(
+            summary = "Rifiuta una richiesta medica",
+            description = "Permette al medico curante di rifiutare una richiesta specificando il motivo."
+    )
     public ResponseEntity<?> rifiutaRichiestaMedica(@RequestBody @Valid RifiutoRichiestaRequest rifiutoRichiestaRequest) {
         return ResponseEntity.ok().body(richiestaMedicaService.rifiutaRichiestaMedica(rifiutoRichiestaRequest));
     }

@@ -1,5 +1,7 @@
 package prenotazione.medica.chat.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -7,6 +9,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import prenotazione.medica.auth.entity.Account;
 import prenotazione.medica.chat.dto.response.MessageResponse;
 import prenotazione.medica.chat.service.MessageService;
 import prenotazione.medica.chat.dto.MessageDTO;
@@ -38,6 +41,7 @@ import java.util.Map;
  */
 @Controller
 @RequiredArgsConstructor
+@Tag(name = "Messaggistica", description = "Endpoint REST per la posta interna e handler WebSocket per la chat.")
 public class ChatController {
 
     private final MessageService messageService;
@@ -54,7 +58,7 @@ public class ChatController {
         }
         Long currentAccountId = accountRepository
                 .findByUsername(principal.getName())
-                .map(acc -> acc.getId())
+                .map(Account::getId)
                 .orElseThrow(() -> new ResourceNotFoundException("account.notfound.for", principal.getName()));
         messageDTO.setSenderId(currentAccountId);
         messageService.sendMessage(messageDTO);
@@ -67,6 +71,10 @@ public class ChatController {
     @PostMapping("/api/messages")
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Invia messaggio REST",
+            description = "Invia un messaggio (fallback REST) tra due account quando il WebSocket non è disponibile."
+    )
     public ResponseEntity<MessageResponse> sendMessageRest(@RequestBody Map<String, Object> body) {
         if (body == null || body.get("receiverId") == null || body.get("content") == null) {
             return ResponseEntity.badRequest().build();
@@ -88,6 +96,10 @@ public class ChatController {
     @GetMapping("/api/messages/conversation")
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Storico conversazione",
+            description = "Carica lo storico dei messaggi tra due utenti, consentito solo se l'utente corrente è uno dei due."
+    )
     public ResponseEntity<List<MessageResponse>> getConversation(
             @RequestParam Long userId1,
             @RequestParam Long userId2) {
@@ -105,6 +117,10 @@ public class ChatController {
     @PutMapping("/api/messages/read")
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Segna messaggi come letti",
+            description = "Segna come letti i messaggi inviati da senderId verso receiverId. Solo il destinatario può eseguirlo."
+    )
     public ResponseEntity<Void> markAsRead(@RequestParam Long senderId, @RequestParam Long receiverId) {
         if (!SecurityUtils.getCurrentAccountId().equals(receiverId)) {
             return ResponseEntity.status(403).build();
@@ -120,6 +136,10 @@ public class ChatController {
     @GetMapping("/api/messages/unread/count")
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Conteggio messaggi non letti",
+            description = "Restituisce il numero di messaggi non letti per l'utente indicato, se coincide con l'account corrente."
+    )
     public ResponseEntity<Integer> getUnreadCount(@RequestParam Long userId) {
         if (!SecurityUtils.getCurrentAccountId().equals(userId)) {
             return ResponseEntity.status(403).build();
