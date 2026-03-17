@@ -31,11 +31,14 @@ import prenotazione.medica.auth.SecurityUtils;
 import prenotazione.medica.shared.i18n.I18nMessageService;
 import prenotazione.medica.auth.service.AccountService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import prenotazione.medica.richiestaMedica.dto.response.RichiestaMedicaListItemDTO;
 
 /**
  * Servizio per il ciclo di vita delle richieste mediche: CRUD generico (commons), creazione da
@@ -130,10 +133,10 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
      * Restituisce le richieste filtrate per stato e per l'utente autenticato (paziente o medico).
      * Usa {@link RichiestaMedicaSpecification} per criteri composabili.
      */
-    public List<RichiestaMedica> findAllByStatoAndPazienteId(EStatoRichiesta stato) {
+    public Page<RichiestaMedicaListItemDTO> findAllByStatoAndPazienteId(EStatoRichiesta stato, int page, int size) {
         Optional<Account> accountOptional = accountService.findById(SecurityUtils.getCurrentAccountId());
         if (accountOptional.isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty();
         }
         Account accountUtente = accountOptional.get();
         var spec = RichiestaMedicaSpecification.hasStato(stato);
@@ -144,29 +147,44 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
             MedicoCurante medicoCurante = medicoCuranteService.findByAccountId(accountUtente.getId());
             spec = spec.and(RichiestaMedicaSpecification.hasMedicoCuranteId(medicoCurante.getId()));
         } else {
-            return Collections.emptyList();
+            return Page.empty();
         }
-        return richiestaMedicaRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "dataEmissione"));
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataEmissione"));
+        return richiestaMedicaRepository.findAll(spec, pageable)
+                .map(this::toListItemDto);
     }
 
-    /** Restituisce tutte le richieste del paziente attualmente autenticato, ordinate per data (più recente prima). */
-    public List<RichiestaMedica> findAllByPazienteId() {
+    /** Restituisce le richieste del paziente attualmente autenticato in forma paginata, ordinate per data (più recente prima). */
+    public Page<RichiestaMedicaListItemDTO> findAllByPazienteId(int page, int size) {
         Long accountId = SecurityUtils.getCurrentAccountId();
         Optional<Account> accountOptional = accountService.findById(accountId);
         if (accountOptional.isEmpty()) {
             logger.warn("findAllByPazienteId: account non trovato per id={}", accountId);
-            return Collections.emptyList();
+            return Page.empty();
         }
         Account account = accountOptional.get();
         if (account.getRuolo() != ERuolo.PAZIENTE) {
             logger.warn("findAllByPazienteId: account id={} non è PAZIENTE (ruolo={})", accountId, account.getRuolo());
-            return Collections.emptyList();
+            return Page.empty();
         }
         Paziente paziente = pazienteService.findByAccountId(account.getId());
         var spec = RichiestaMedicaSpecification.hasPazienteId(paziente.getId());
-        List<RichiestaMedica> list = richiestaMedicaRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "dataEmissione"));
-        logger.info("findAllByPazienteId: accountId={}, pazienteId={}, richieste={}", accountId, paziente.getId(), list.size());
-        return list;
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataEmissione"));
+        Page<RichiestaMedicaListItemDTO> result = richiestaMedicaRepository.findAll(spec, pageable)
+                .map(this::toListItemDto);
+        logger.info("findAllByPazienteId: accountId={}, pazienteId={}, richieste={}", accountId, paziente.getId(), result.getTotalElements());
+        return result;
+    }
+
+    private RichiestaMedicaListItemDTO toListItemDto(RichiestaMedica r) {
+        return new RichiestaMedicaListItemDTO(
+                r.getId(),
+                r.getDataEmissione(),
+                r.getDataAccettazione(),
+                r.getTipoRichiesta() != null ? r.getTipoRichiesta().name() : null,
+                r.getStato() != null ? r.getStato().name() : null,
+                r.getDescrizione()
+        );
     }
 
     /** Restituisce tutte le richieste del medico curante attualmente autenticato, con dati paziente per la dashboard. */
