@@ -25,11 +25,6 @@ import java.util.List;
 @Repository
 public interface RichiestaMedicaRepository extends JpaRepository<RichiestaMedica, Long>, JpaSpecificationExecutor<RichiestaMedica> {
 
-    List<RichiestaMedica> findAllByStatoAndMedicoCurante_Id(EStatoRichiesta stato, Long medicoId);
-    List<RichiestaMedica> findAllByStatoAndPaziente_Id(EStatoRichiesta stato, Long pazienteId);
-    List<RichiestaMedica> findAllByPaziente_IdOrderByDataEmissioneDesc(Long pazienteId);
-    List<RichiestaMedica> findAllByMedicoCurante_IdOrderByDataEmissioneDesc(Long medicoId);
-
     /**
      * Marca come SCADUTA le richieste accettate la cui data di accettazione è precedente a {@code limite}.
      * Invocato da uno job schedulato (es. {@link org.springframework.scheduling.annotation.Scheduled}).

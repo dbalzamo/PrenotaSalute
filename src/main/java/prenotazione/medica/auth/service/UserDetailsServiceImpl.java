@@ -11,7 +11,6 @@ import prenotazione.medica.auth.entity.Account;
 import prenotazione.medica.auth.entity.UserDetailsImpl;
 import prenotazione.medica.auth.repository.AccountRepository;
 import prenotazione.medica.shared.i18n.I18nMessageService;
-import prenotazione.medica.shared.security.StompSecurityContextInterceptor;
 
 /**
  * Implementazione di {@link UserDetailsService}: carica un utente per username (login) e lo
@@ -19,8 +18,8 @@ import prenotazione.medica.shared.security.StompSecurityContextInterceptor;
  * <p>
  * <b>Ruolo nell'architettura:</b> usata dal {@link DaoAuthenticationProvider} per il login
  * form (se abilitato) e soprattutto da {@link JwtAuthenticationFilter}
- * e da {@link StompSecurityContextInterceptor} per caricare i dettagli
- * utente dopo la validazione del JWT (username → Account → UserDetailsImpl con id e ruoli).
+ * per caricare i dettagli utente dopo la validazione del JWT
+ * (username → Account → UserDetailsImpl con id e ruoli).
  * </p>
  *
  * @see UserDetailsService – interfaccia contrattuale Spring Security per il caricamento utente per username.
@@ -35,7 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     /**
      * Carica l'account per username e lo converte in UserDetailsImpl (id, username, password, autorità).
-     * Invocato dal filtro JWT e dall'interceptor WebSocket dopo aver estratto lo username dal token.
+     * Invocato dal filtro JWT dopo aver estratto lo username dal token.
      */
     @Override
     @Transactional

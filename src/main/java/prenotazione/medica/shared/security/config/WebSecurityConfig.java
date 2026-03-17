@@ -1,6 +1,5 @@
 package prenotazione.medica.shared.security.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,10 +39,17 @@ public class WebSecurityConfig {
 	@Value("${server.servlet.context-path:}")
 	private String contextPath;
 
-	@Autowired
-	private UserDetailsServiceImpl userDetailsService;
-	@Autowired
-	private AuthEntryPointJwt unauthorizedHandler;
+	private final UserDetailsServiceImpl userDetailsService;
+	private final AuthEntryPointJwt unauthorizedHandler;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+	public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
+							 AuthEntryPointJwt unauthorizedHandler,
+							 JwtAuthenticationFilter jwtAuthenticationFilter) {
+		this.userDetailsService = userDetailsService;
+		this.unauthorizedHandler = unauthorizedHandler;
+		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+	}
 
 
 	@Bean
@@ -57,18 +63,12 @@ public class WebSecurityConfig {
 				.authorizeHttpRequests(auth ->
 						auth.requestMatchers("/error", contextPath + "/error").permitAll()
 								.requestMatchers("/api/auth/**", apiAuth).permitAll()
-								.requestMatchers(contextPath + "/ws/**", "/ws/**").permitAll()
 								.requestMatchers("/api/v1/**", apiV1).authenticated()
 								.anyRequest().authenticated());
 		http.authenticationProvider(authenticationProvider());
-		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
-	}
-
-	@Bean
-	public JwtAuthenticationFilter authenticationJwtTokenFilter() {
-		return new JwtAuthenticationFilter();
 	}
 
 	@Bean

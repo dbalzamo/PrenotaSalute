@@ -10,9 +10,6 @@ Questo documento descrive in modo sintetico l’architettura del backend e dove 
 |--------|--------|
 | **PrenotazioneMedicaApplication** | Avvio Spring Boot, abilita scheduling. |
 | **ModelMapperConfig** | Bean `ModelMapper` per conversione entità ↔ DTO. |
-| **WebSocketConfig** | Configurazione STOMP: endpoint `/ws`, prefissi `/app`, `/user/queue`, handshake JWT e interceptor SecurityContext. |
-| **JwtHandshakeHandler** | Durante l’handshake WebSocket legge il JWT (es. da query `?token=...`) e imposta il Principal (username) sulla sessione. |
-| **StompSecurityContextInterceptor** | Per ogni messaggio STOMP in ingresso (es. `/app/chat.send`) imposta il SecurityContext a partire dal Principal, così l’utente è identificabile. |
 
 ---
 
@@ -23,7 +20,6 @@ Questo documento descrive in modo sintetico l’architettura del backend e dove 
 | **Account** | Credenziali e ruolo (PAZIENTE / MEDICO_CURANTE). Punto di ingresso per autenticazione. Relazioni opzionali con Paziente e MedicoCurante. |
 | **Paziente** | Profilo anagrafico del paziente, collegato a Account; possiede richieste mediche, impegnative e medico curante associato. |
 | **MedicoCurante** | Profilo del medico, collegato a Account; possiede richieste e impegnative. |
-| **Message** | Messaggio della Posta (senderId/receiverId = id Account, content, read, sentAt). |
 | **RichiestaMedica** | Richiesta del paziente al medico (stato, tipo, descrizione, date). |
 | **Impegnativa** | Prescrizione emessa dal medico (regione, NRE, priorità, collegata a RichiestaMedica e PrestazioneSanitaria). |
 | **PrestazioneSanitaria** | Dettaglio tecnico collegato a un’impegnativa. |
@@ -34,8 +30,8 @@ Questo documento descrive in modo sintetico l’architettura del backend e dove 
 ## 3. DTO (request / response)
 
 - **Request:** `AuthRequest`, `SignupRequest`, `RichiestaMedicaRequest`, `RifiutoRichiestaRequest`, `ImpegnativaRequest` – body delle POST/PUT.
-- **Response:** `AuthResponse` (JWT, ruoli), `SignupResponse`, `MessageResponse`, `MedicoCuranteResponse`, `RichiestaMedicaMedicoResponse`, `ImpegnativaResponse`, ecc.
-- **Altri DTO:** `MessageDTO`, `ConversazionePreviewDTO`, `PazientePerMessaggioDTO`, `MedicoCuranteListItemDTO`, `PazienteDTO`, `PrestazioneSanitariaDTO`.
+- **Response:** `AuthResponse` (JWT, ruoli), `SignupResponse`, `MedicoCuranteResponse`, `RichiestaMedicaMedicoResponse`, `ImpegnativaResponse`, ecc.
+- **Altri DTO:** `MedicoCuranteListItemDTO`, `PazienteDTO`, `PrestazioneSanitariaDTO`.
 
 Ogni DTO ha in JavaDoc lo scopo e l’endpoint o il contesto in cui viene usato.
 
@@ -54,7 +50,7 @@ Ogni DTO ha in JavaDoc lo scopo e l’endpoint o il contesto in cui viene usato.
 
 Tutti estendono `JpaRepository<Entità, Long>` e sono documentati con il proprio ruolo e i consumer principali.
 
-- **AccountRepository** – findByUsername, existsByUsername/Email, usato da UserDetailsServiceImpl, AccountService, ChatController.
+- **AccountRepository** – findByUsername, existsByUsername/Email, usato da UserDetailsServiceImpl, AccountService.
 - **PazienteRepository** – findByAccountId, findByMedicoCurante_Id.
 - **MedicoCuranteRepository** – findByAccountId.
 - **MessageRepository** – findConversation, findLatestInConversation, countByReceiverIdAndReadFalse, countByReceiverIdAndSenderIdAndReadFalse.
@@ -68,10 +64,9 @@ Tutti estendono `JpaRepository<Entità, Long>` e sono documentati con il proprio
 | Servizio | Ruolo |
 |----------|--------|
 | **AccountService** | Login (JWT + cookie), logout, creazione account in signup. |
-| **UserDetailsServiceImpl** | Caricamento utente per username (per filtro JWT e WebSocket). |
-| **MessageService** | Invio messaggi (persistenza + notifica WebSocket), conversazioni, mark as read, conteggio non letti, anteprime lista chat medico. |
+| **UserDetailsServiceImpl** | Caricamento utente per username (per filtro JWT). |
 | **MedicoCuranteService** | Ricerca medico, creazione in signup, elenco pazienti, elenco medici per signup. |
-| **PazienteService** | Ricerca paziente, creazione in signup, medico curante (GET/PUT), DTO medico per Posta. |
+| **PazienteService** | Ricerca paziente, creazione in signup, medico curante (GET/PUT). |
 | **RichiestaMedicaService** | CRUD richieste, visualizza/accetta/rifiuta, job scadenza, notifiche. |
 | **ImpegnativaService** | Generazione impegnativa da richiesta accettata. |
 
@@ -82,8 +77,7 @@ Tutti estendono `JpaRepository<Entità, Long>` e sono documentati con il proprio
 | Controller | Ruolo |
 |------------|--------|
 | **AuthController** | POST login, logout, signup; GET medici-curanti. |
-| **ChatController** | WebSocket `/app/chat.send`; REST /api/messages (invia, conversazione, read, unread/count). |
-| **MedicoCuranteController** | CRUD /api/v1/medici-curanti; GET /me, /pazienti, /conversazioni. |
+| **MedicoCuranteController** | CRUD /api/v1/medici-curanti; GET /me. |
 | **PazienteController** | CRUD /api/v1/pazienti; GET /me, /mio-medico; PUT /mio-medico, /updatePaziente. |
 | **RichiestaMedicaController** | CRUD /api/v1/richieste-mediche; crea-richiesta, mie-richieste, medico/richieste, trova-richiesta, visualizza, accetta, rifiuta. |
 | **ImpegnativaController** | CRUD /api/v1/impegnative; POST /genera-impegnativa. |

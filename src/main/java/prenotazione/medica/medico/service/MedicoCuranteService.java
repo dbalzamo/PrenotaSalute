@@ -11,10 +11,7 @@ import prenotazione.medica.medico.api.MedicoCuranteController;
 import prenotazione.medica.medico.dto.MedicoCuranteDTO;
 import prenotazione.medica.medico.dto.MedicoCuranteListItemDTO;
 import prenotazione.medica.medico.entity.MedicoCurante;
-import prenotazione.medica.chat.dto.PazientePerMessaggioDTO;
-import prenotazione.medica.auth.entity.Account;
 import prenotazione.medica.shared.exception.ResourceNotFoundException;
-import prenotazione.medica.paziente.repository.PazienteRepository;
 import prenotazione.medica.shared.i18n.I18nMessageService;
 
 import java.util.List;
@@ -33,18 +30,15 @@ import java.util.stream.Collectors;
 public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, MedicoCuranteDTO, Long> {
 
     private final MedicoCuranteRepository medicoCuranteRepository;
-    private final PazienteRepository pazienteRepository;
     private final ModelMapper modelMapper;
     private final I18nMessageService i18n;
 
     public MedicoCuranteService(MedicoCuranteRepository medicoCuranteRepository,
-                                PazienteRepository pazienteRepository,
                                 MedicoCuranteMapper medicoCuranteMapper,
                                 ModelMapper modelMapper,
                                 I18nMessageService i18n) {
         super(medicoCuranteRepository, medicoCuranteMapper);
         this.medicoCuranteRepository = medicoCuranteRepository;
-        this.pazienteRepository = pazienteRepository;
         this.modelMapper = modelMapper;
         this.i18n = i18n;
     }
@@ -74,19 +68,6 @@ public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, 
         medicoCuranteRepository.save(medicoCurante);
 
         return new SignupResponse(true, i18n.getMessage("medico.registered"), null);
-    }
-
-    /** Elenco pazienti associati al medico (per messaggistica). */
-    public List<PazientePerMessaggioDTO> findPazientiForMessaging(Long medicoCuranteAccountId) {
-        MedicoCurante medico = findByAccountId(medicoCuranteAccountId);
-        return pazienteRepository.findByMedicoCurante_Id(medico.getId()).stream()
-                .map(p -> new PazientePerMessaggioDTO(
-                        p.getId(),
-                        p.getNome(),
-                        p.getCognome(),
-                        p.getAccount() != null ? p.getAccount().getId() : null
-                ))
-                .collect(Collectors.toList());
     }
 
     /** Elenco medici curanti per selezione in signup (id, nome, cognome). Endpoint pubblico. */

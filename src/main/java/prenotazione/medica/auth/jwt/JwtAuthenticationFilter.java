@@ -5,10 +5,10 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,7 +18,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import prenotazione.medica.auth.service.UserDetailsServiceImpl;
-import prenotazione.medica.shared.security.JwtHandshakeHandler;
 
 /**
  * Filtro Spring Security che esegue l'autenticazione JWT su ogni richiesta HTTP.
@@ -28,8 +27,7 @@ import prenotazione.medica.shared.security.JwtHandshakeHandler;
  * lo username e carica i {@link UserDetails} con {@link UserDetailsServiceImpl#loadUserByUsername},
  * poi imposta l'{@link org.springframework.security.core.Authentication} nel
  * {@link org.springframework.security.core.context.SecurityContextHolder}. I controller e
- * SecurityUtils possono così ottenere l'utente corrente. Per le richieste WebSocket l'autenticazione
- * avviene in handshake ({@link JwtHandshakeHandler}).
+ * SecurityUtils possono così ottenere l'utente corrente.
  * </p>
  *
  * @see OncePerRequestFilter – garantisce una sola esecuzione per richiesta.
@@ -38,10 +36,15 @@ import prenotazione.medica.shared.security.JwtHandshakeHandler;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+
+    private final JwtService jwtService;
+    private final UserDetailsServiceImpl userDetailsService;
+
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   UserDetailsServiceImpl userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
 
 
     @Override

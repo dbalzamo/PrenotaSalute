@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import prenotazione.medica.auth.dto.request.AuthRequest;
 import prenotazione.medica.auth.dto.request.SignupRequest;
+import prenotazione.medica.auth.dto.request.ChangePasswordRequest;
+import prenotazione.medica.auth.dto.request.ChangeUsernameRequest;
 import prenotazione.medica.auth.dto.response.AuthResponse;
 import prenotazione.medica.auth.dto.response.SignupResponse;
 import prenotazione.medica.auth.service.AccountService;
@@ -113,6 +117,26 @@ public class AuthController
         return ResponseEntity.badRequest().body(i18n.getMessage("auth.signup.cancelled"));
     }
 
+    @PutMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Cambio password account corrente",
+            description = "Permette all'utente autenticato di cambiare la propria password fornendo quella attuale e la nuova."
+    )
+    public ResponseEntity<String> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        accountService.changePassword(request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok(i18n.getMessage("auth.password.changed"));
+    }
 
+    @PutMapping("/change-username")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "Cambio username account corrente",
+            description = "Permette all'utente autenticato di cambiare il proprio username, se non già utilizzato."
+    )
+    public ResponseEntity<String> changeUsername(@RequestBody @Valid ChangeUsernameRequest request) {
+        accountService.changeUsername(request.getNewUsername());
+        return ResponseEntity.ok(i18n.getMessage("auth.username.changed"));
+    }
 
 }

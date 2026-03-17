@@ -3,6 +3,7 @@ package prenotazione.medica.richiestaMedica.api;
 import com.prenotasalute.commons.controller.GenericController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import prenotazione.medica.richiestaMedica.service.RichiestaMedicaService;
 import prenotazione.medica.richiestaMedica.dto.RichiestaMedicaDTO;
 import prenotazione.medica.richiestaMedica.dto.request.RichiestaMedicaRequest;
 import prenotazione.medica.richiestaMedica.dto.request.RifiutoRichiestaRequest;
+import prenotazione.medica.richiestaMedica.dto.response.RichiestaMedicaListItemDTO;
 import prenotazione.medica.shared.enums.EStatoRichiesta;
 import prenotazione.medica.shared.i18n.I18nMessageService;
 
@@ -49,8 +51,10 @@ public class RichiestaMedicaController extends GenericController<RichiestaMedica
             summary = "Richieste mediche del paziente",
             description = "Restituisce tutte le richieste mediche create dal paziente corrente."
     )
-    public ResponseEntity<?> getMieRichieste() {
-        return ResponseEntity.ok().body(richiestaMedicaService.findAllByPazienteId());
+    public ResponseEntity<Page<RichiestaMedicaListItemDTO>> getMieRichieste(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(richiestaMedicaService.findAllByPazienteId(page, size));
     }
 
     @GetMapping("/medico/richieste")
@@ -69,11 +73,14 @@ public class RichiestaMedicaController extends GenericController<RichiestaMedica
             summary = "Filtra richieste per stato",
             description = "Restituisce le richieste mediche del soggetto corrente filtrate per stato (default INVIATA)."
     )
-    public ResponseEntity<?> getRichiestePerStato(@RequestParam(name = "stato", required = false) EStatoRichiesta stato) {
+    public ResponseEntity<Page<RichiestaMedicaListItemDTO>> getRichiestePerStato(
+            @RequestParam(name = "stato", required = false) EStatoRichiesta stato,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         if (stato == null) {
             stato = EStatoRichiesta.INVIATA;
         }
-        return ResponseEntity.ok().body(richiestaMedicaService.findAllByStatoAndPazienteId(stato));
+        return ResponseEntity.ok(richiestaMedicaService.findAllByStatoAndPazienteId(stato, page, size));
     }
 
     @PutMapping("/visualizza-richiesta/{idRichiestaMedica}")
