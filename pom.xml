@@ -29,7 +29,7 @@
             <id>github</id>
             <url>https://maven.pkg.github.com/dbalzamo/prenotasalute-commons</url>
             <snapshots>
-                <enabled>true</enabled>  ← questo manca probabilmente
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
