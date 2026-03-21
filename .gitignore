@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### .env ####
+.env
+
+### documentazione analisi progetto ####
+/src/main/resources/analisi-doc
+/src/main/resources/db/migration/V1__baseline_schema.sql
+
+### rules per Cursor AI ###
+.cursor

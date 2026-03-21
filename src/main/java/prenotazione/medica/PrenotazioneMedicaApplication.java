@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @SpringBootApplication combina: configurazione, auto-configurazione e component scan del package.
  * @EnableScheduling permette l'uso di @Scheduled per job ricorrenti (se presenti).
+ * JPA Auditing è attivato in {@link prenotazione.medica.shared.config.JpaAuditingConfig}.
  */
 @SpringBootApplication
 @EnableScheduling

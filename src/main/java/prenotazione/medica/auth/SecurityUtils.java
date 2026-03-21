@@ -1,0 +1,58 @@
+package prenotazione.medica.auth;
+
+import java.util.Optional;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import prenotazione.medica.auth.entity.UserDetailsImpl;
+import prenotazione.medica.shared.exception.UnauthorizedException;
+
+/**
+ * Utility per ottenere l'id dell'account corrente dal contesto di sicurezza Spring.
+ * <p>
+ * <b>Ruolo nell'architettura:</b> usata dai controller REST che devono identificare l'utente
+ * autenticato (es. per verificare che userId coincida con l'account loggato, o per impostare
+ * senderId/owner). Funziona solo quando il contesto di sicurezza è popolato
+ * (richieste HTTP dopo il filtro JWT).
+ * </p>
+ *
+ * @see SecurityContextHolder – contenitore thread-local che tiene l'autenticazione corrente.
+ * @see UserDetailsImpl – Principal usato dopo login (contiene id account e ruoli).
+ */
+public class SecurityUtils
+{
+    /**
+     * Restituisce l'id account se la richiesta è autenticata con {@link UserDetailsImpl};
+     * altrimenti {@link Optional#empty()} (anonimo, sistema, signup, job schedulati).
+     * Usato da Spring Data JPA {@link org.springframework.data.domain.AuditorAware} per
+     * {@code @CreatedBy} / {@code @LastModifiedBy} senza eccezioni su contesto non autenticato.
+     */
+    public static Optional<Long> getCurrentAccountIdOptional() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsImpl)) {
+            return Optional.empty();
+        }
+        return Optional.of(((UserDetailsImpl) principal).getId());
+    }
+
+    /**
+     * Restituisce l'id dell'account dell'utente attualmente autenticato.
+     * @return id dell'account (da UserDetailsImpl)
+     * @throws RuntimeException se nessun utente è autenticato (SecurityContext vuoto o principal non UserDetailsImpl)
+     */
+    public static Long getCurrentAccountId(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("account.notauthenticated");
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        return  userDetails.getId();
+    }
+}
