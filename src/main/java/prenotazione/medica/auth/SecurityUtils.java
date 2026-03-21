@@ -1,5 +1,7 @@
 package prenotazione.medica.auth;
 
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import prenotazione.medica.auth.entity.UserDetailsImpl;
@@ -19,6 +21,24 @@ import prenotazione.medica.shared.exception.UnauthorizedException;
  */
 public class SecurityUtils
 {
+    /**
+     * Restituisce l'id account se la richiesta è autenticata con {@link UserDetailsImpl};
+     * altrimenti {@link Optional#empty()} (anonimo, sistema, signup, job schedulati).
+     * Usato da Spring Data JPA {@link org.springframework.data.domain.AuditorAware} per
+     * {@code @CreatedBy} / {@code @LastModifiedBy} senza eccezioni su contesto non autenticato.
+     */
+    public static Optional<Long> getCurrentAccountIdOptional() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsImpl)) {
+            return Optional.empty();
+        }
+        return Optional.of(((UserDetailsImpl) principal).getId());
+    }
+
     /**
      * Restituisce l'id dell'account dell'utente attualmente autenticato.
      * @return id dell'account (da UserDetailsImpl)

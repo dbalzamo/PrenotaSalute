@@ -1,21 +1,20 @@
 package prenotazione.medica.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import prenotazione.medica.auth.service.UserDetailsServiceImpl;
-import prenotazione.medica.paziente.entity.Paziente;
-import prenotazione.medica.medico.entity.MedicoCurante;
+import com.prenotasalute.commons.entity.EntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import prenotazione.medica.auth.service.UserDetailsServiceImpl;
+import prenotazione.medica.paziente.entity.Paziente;
+import prenotazione.medica.medico.entity.MedicoCurante;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import prenotazione.medica.shared.enums.ERuolo;
 
@@ -35,17 +34,14 @@ import prenotazione.medica.shared.enums.ERuolo;
  * @see Entity – mappatura JPA sulla tabella {@code account}.
  * @see JsonBackReference – evita riferimenti circolari in serializzazione JSON (Paziente/MedicoCurante).
  */
-@Entity
-@Table(name = "account")
+@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account
+@Entity
+@Table(name = "account")
+public class Account extends EntityBase
 {
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
-
 	@Column(name = "username", length = 50, nullable = false)
 	private String username;
 	
