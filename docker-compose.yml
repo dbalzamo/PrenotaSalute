@@ -1,26 +1,10 @@
 version: '3.8'
+
 services:
-  app:
-    build:
-      context: .
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        GITHUB_ACTOR: ${GITHUB_ACTOR}
-    ports:
-      - "8080:8080"
-    environment:
-      DB_URL: ${DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-    depends_on:
-      mysql:
-        condition: service_healthy
-    restart: unless-stopped
 
   mysql:
-    image: mysql:8
+    image: mysql:8.0
+    container_name: prenotasalute-db
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: hospital_book_management
@@ -31,20 +15,23 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
+      timeout: 5s
       retries: 5
 
-  sonarqube:
-    image: sonarqube:community
+  app:
+    image: dbalzamo/prenotazione-medica:latest
+    container_name: prenotasalute-app
     ports:
-      - "9000:9000"
+      - "8080:8080"
     environment:
-      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
-    volumes:
-      - sonar_data:/opt/sonarqube/data
-      - sonar_logs:/opt/sonarqube/logs
-    restart: unless-stopped
+      DB_URL: jdbc:mysql://mysql:3306/hospital_book_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:
-  sonar_data:
-  sonar_logs:
