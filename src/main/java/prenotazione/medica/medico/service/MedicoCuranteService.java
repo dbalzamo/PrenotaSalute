@@ -1,9 +1,10 @@
 package prenotazione.medica.medico.service;
 
+import com.prenotasalute.commons.mapper.GenericMapper;
 import com.prenotasalute.commons.service.AbstractGenericService;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.auth.dto.request.SignupRequest;
+import prenotazione.medica.auth.entity.Account;
 import prenotazione.medica.auth.dto.response.SignupResponse;
 import prenotazione.medica.medico.mapper.MedicoCuranteMapper;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
@@ -30,16 +31,16 @@ import java.util.stream.Collectors;
 public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, MedicoCuranteDTO, Long> {
 
     private final MedicoCuranteRepository medicoCuranteRepository;
-    private final ModelMapper modelMapper;
+    /** Riferimento tipizzato per metodi MapStruct oltre {@link com.prenotasalute.commons.mapper.GenericMapper} (es. signup). */
+    private final MedicoCuranteMapper medicoCuranteMapper;
     private final I18nMessageService i18n;
 
     public MedicoCuranteService(MedicoCuranteRepository medicoCuranteRepository,
                                 MedicoCuranteMapper medicoCuranteMapper,
-                                ModelMapper modelMapper,
                                 I18nMessageService i18n) {
         super(medicoCuranteRepository, medicoCuranteMapper);
         this.medicoCuranteRepository = medicoCuranteRepository;
-        this.modelMapper = modelMapper;
+        this.medicoCuranteMapper = medicoCuranteMapper;
         this.i18n = i18n;
     }
 
@@ -63,7 +64,7 @@ public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, 
 
     public SignupResponse creazioneMedicoCurante(SignupRequest request, Account account)
     {
-        MedicoCurante medicoCurante = modelMapper.map(request, MedicoCurante.class);
+        MedicoCurante medicoCurante = medicoCuranteMapper.toEntityFromSignupRequest(request);
         medicoCurante.setAccount(account);
         medicoCuranteRepository.save(medicoCurante);
 

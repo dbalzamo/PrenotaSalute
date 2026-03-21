@@ -1,7 +1,7 @@
 package prenotazione.medica.paziente.service;
 
+import com.prenotasalute.commons.mapper.GenericMapper;
 import com.prenotasalute.commons.service.AbstractGenericService;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import prenotazione.medica.auth.dto.request.SignupRequest;
@@ -37,7 +37,8 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
 
     private final PazienteRepository pazienteRepository;
     private final MedicoCuranteRepository medicoCuranteRepository;
-    private final ModelMapper modelMapper;
+    /** Riferimento tipizzato per metodi MapStruct oltre {@link GenericMapper} (es. signup). */
+    private final PazienteMapper pazienteMapper;
     private final I18nMessageService i18n;
 
     /**
@@ -47,12 +48,11 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
     public PazienteService(PazienteRepository pazienteRepository,
                            MedicoCuranteRepository medicoCuranteRepository,
                            PazienteMapper pazienteMapper,
-                           ModelMapper modelMapper,
                            I18nMessageService i18n) {
         super(pazienteRepository, pazienteMapper);
         this.pazienteRepository = pazienteRepository;
         this.medicoCuranteRepository = medicoCuranteRepository;
-        this.modelMapper = modelMapper;
+        this.pazienteMapper = pazienteMapper;
         this.i18n = i18n;
     }
 
@@ -71,7 +71,7 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
 
     public SignupResponse creazionePaziente(SignupRequest request, Account account)
     {
-        Paziente paziente = modelMapper.map(request, Paziente.class);
+        Paziente paziente = pazienteMapper.toEntityFromSignupRequest(request);
         paziente.setAccount(account);
         if (request.getMedicoCuranteId() != null) {
             medicoCuranteRepository.findById(request.getMedicoCuranteId()).ifPresent(paziente::setMedicoCurante);

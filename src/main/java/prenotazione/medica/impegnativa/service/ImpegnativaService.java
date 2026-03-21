@@ -1,7 +1,6 @@
 package prenotazione.medica.impegnativa.service;
 
 import com.prenotasalute.commons.service.AbstractGenericService;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.impegnativa.dto.ImpegnativaDTO;
 import prenotazione.medica.impegnativa.mapper.ImpegnativaMapper;
@@ -9,6 +8,7 @@ import prenotazione.medica.impegnativa.repository.ImpegnativaRepository;
 import prenotazione.medica.impegnativa.dto.request.ImpegnativaRequest;
 import prenotazione.medica.impegnativa.api.ImpegnativaController;
 import prenotazione.medica.impegnativa.entity.Impegnativa;
+import prenotazione.medica.prestazioneSanitaria.mapper.PrestazioneSanitariaMapper;
 import prenotazione.medica.prestazioneSanitaria.entity.PrestazioneSanitaria;
 import prenotazione.medica.richiestaMedica.entity.RichiestaMedica;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
@@ -32,7 +32,7 @@ public class ImpegnativaService extends AbstractGenericService<Impegnativa, Impe
     private final RichiestaMedicaService richiestaMedicaService;
     private final PazienteRepository pazienteRepository;
     private final MedicoCuranteRepository medicoCuranteRepository;
-    private final ModelMapper modelMapper;
+    private final PrestazioneSanitariaMapper prestazioneSanitariaMapper;
     private final I18nMessageService i18n;
 
     public ImpegnativaService(ImpegnativaRepository impegnativaRepository,
@@ -40,14 +40,14 @@ public class ImpegnativaService extends AbstractGenericService<Impegnativa, Impe
                               RichiestaMedicaService richiestaMedicaService,
                               PazienteRepository pazienteRepository,
                               MedicoCuranteRepository medicoCuranteRepository,
-                              ModelMapper modelMapper,
+                              PrestazioneSanitariaMapper prestazioneSanitariaMapper,
                               I18nMessageService i18n) {
         super(impegnativaRepository, impegnativaMapper);
         this.impegnativaRepository = impegnativaRepository;
         this.richiestaMedicaService = richiestaMedicaService;
         this.pazienteRepository = pazienteRepository;
         this.medicoCuranteRepository = medicoCuranteRepository;
-        this.modelMapper = modelMapper;
+        this.prestazioneSanitariaMapper = prestazioneSanitariaMapper;
         this.i18n = i18n;
     }
 
@@ -83,7 +83,8 @@ public class ImpegnativaService extends AbstractGenericService<Impegnativa, Impe
     {
         Impegnativa impegnativa = new Impegnativa();
 
-        PrestazioneSanitaria prestazioneSanitaria = modelMapper.map(request.getPrestazioneSanitariaDTO(), PrestazioneSanitaria.class);
+        PrestazioneSanitaria prestazioneSanitaria =
+                prestazioneSanitariaMapper.toEntity(request.getPrestazioneSanitariaDTO());
         impegnativa.setPrestazioneSanitaria(prestazioneSanitaria);
         prestazioneSanitaria.setImpegnativa(impegnativa);
 
@@ -95,11 +96,6 @@ public class ImpegnativaService extends AbstractGenericService<Impegnativa, Impe
         impegnativa.setPriorità(request.getPriorita());
         impegnativa.setPaziente(richiestaMedica.getPaziente());
         impegnativa.setMedicoCurante(richiestaMedica.getMedicoCurante());
-
-        prestazioneSanitaria.setCodicePrestazione(request.getPrestazioneSanitariaDTO().getCodicePrestazione());
-        prestazioneSanitaria.setDescrizione(request.getPrestazioneSanitariaDTO().getDescrizione());
-        prestazioneSanitaria.setNote(request.getPrestazioneSanitariaDTO().getNote());
-        prestazioneSanitaria.setQuantita(request.getPrestazioneSanitariaDTO().getQuantita());
 
         impegnativaRepository.save(impegnativa);
 

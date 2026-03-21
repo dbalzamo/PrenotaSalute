@@ -2,7 +2,6 @@ package prenotazione.medica.richiestaMedica.service;
 
 import com.prenotasalute.commons.service.AbstractGenericService;
 import jakarta.transaction.Transactional;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -57,7 +56,6 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
     private static final Logger logger = LoggerFactory.getLogger(RichiestaMedicaService.class);
 
     private final RichiestaMedicaRepository richiestaMedicaRepository;
-    private final ModelMapper modelMapper;
     private final AccountService accountService;
     private final PazienteService pazienteService;
     private final MedicoCuranteService medicoCuranteService;
@@ -67,7 +65,6 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
 
     public RichiestaMedicaService(RichiestaMedicaRepository richiestaMedicaRepository,
                                   RichiestaMedicaMapper richiestaMedicaMapper,
-                                  ModelMapper modelMapper,
                                   AccountService accountService,
                                   PazienteService pazienteService,
                                   MedicoCuranteService medicoCuranteService,
@@ -76,7 +73,6 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
                                   I18nMessageService i18n) {
         super(richiestaMedicaRepository, richiestaMedicaMapper);
         this.richiestaMedicaRepository = richiestaMedicaRepository;
-        this.modelMapper = modelMapper;
         this.accountService = accountService;
         this.pazienteService = pazienteService;
         this.medicoCuranteService = medicoCuranteService;
@@ -115,8 +111,8 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
 
     public String creaRichiestaMedica(RichiestaMedicaRequest request)
     {
-        RichiestaMedica richiestaMedica = modelMapper.map(request, RichiestaMedica.class);
-
+        RichiestaMedica richiestaMedica = new RichiestaMedica();
+        richiestaMedica.setDescrizione(request.getDescrizione());
         richiestaMedica.setId(null);
         richiestaMedica.setPaziente(pazienteService.findByAccountId(SecurityUtils.getCurrentAccountId()));
         richiestaMedica.setMedicoCurante(medicoCuranteService.findById(request.getIdMedico()));
