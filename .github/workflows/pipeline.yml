@@ -31,7 +31,8 @@ jobs:
       - name: SonarQube Analysis
         run: |
           mvn sonar:sonar \
-            -Dsonar.projectKey=prenotazione-medica \
+            -Dsonar.projectKey=dbalzamo_PrenotaSalute \
+            -Dsonar.organization=el-dariito \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
