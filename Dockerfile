@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM --platform=linux/amd64 maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
 ARG GITHUB_TOKEN
