@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### .env ####
+.env
+
+### documentazione analisi progetto ####
+/analisi-doc
+
+### rules per Cursor AI ###
+.cursor
