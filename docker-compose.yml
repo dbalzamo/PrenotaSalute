@@ -33,5 +33,9 @@ services:
       mysql:
         condition: service_healthy
 
+networks:
+  default:
+    name: prenotasalute-be_default
+
 volumes:
   mysql_data:
