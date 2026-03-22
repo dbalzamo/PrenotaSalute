@@ -18,6 +18,11 @@ import prenotazione.medica.shared.security.AuthEntryPointJwt;
 import prenotazione.medica.auth.jwt.JwtAuthenticationFilter;
 import prenotazione.medica.auth.service.UserDetailsServiceImpl;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
+
 /**
  * Configurazione della sicurezza HTTP (Spring Security).
  * <p>
@@ -57,7 +62,10 @@ public class WebSecurityConfig {
 		// Path può arrivare con o senza context-path a seconda del dispatcher
 		String apiAuth = contextPath + "/api/auth/**";
 		String apiV1 = contextPath + "/api/v1/**";
-		http.csrf(csrf -> csrf.disable())
+
+		http
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.csrf(csrf -> csrf.disable())
 				.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth ->
@@ -69,6 +77,23 @@ public class WebSecurityConfig {
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
+	}
+
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(List.of(
+				"http://localhost:4200",  // Angular dev
+				"http://localhost:80",    // Angular in Docker
+				"http://localhost"        // nginx senza porta
+		));
+		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		config.setAllowedHeaders(List.of("*"));
+		config.setAllowCredentials(true);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
 	}
 
 	@Bean
