@@ -19,4 +19,8 @@ public class AuthResponse {
     private String email;
     private List<String> ruoli;
     private String token;
+    /**
+     * Messaggio opzionale (es. conferma cambio username). Assente nelle risposte di login standard.
+     */
+    private String message;
 }

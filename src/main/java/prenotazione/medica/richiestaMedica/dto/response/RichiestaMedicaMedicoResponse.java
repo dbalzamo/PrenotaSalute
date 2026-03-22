@@ -30,4 +30,6 @@ public class RichiestaMedicaMedicoResponse {
     private Long pazienteId;
     private String pazienteNome;
     private String pazienteCognome;
+    /** Id impegnativa generata da questa richiesta, se presente. */
+    private Long impegnativaId;
 }

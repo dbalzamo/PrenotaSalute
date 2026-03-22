@@ -3,8 +3,6 @@ package prenotazione.medica.paziente.api;
 import com.prenotasalute.commons.controller.GenericController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,8 +22,6 @@ import prenotazione.medica.shared.i18n.I18nMessageService;
 @RequestMapping("/api/v1/pazienti")
 @Tag(name = "Pazienti", description = "Gestione anagrafica e profilo paziente.")
 public class PazienteController extends GenericController<PazienteDTO, Long> {
-
-    private static final Logger logger = LoggerFactory.getLogger(PazienteController.class);
 
     private final PazienteService pazienteService;
     private final I18nMessageService i18n;
@@ -50,23 +46,13 @@ public class PazienteController extends GenericController<PazienteDTO, Long> {
     @PreAuthorize("hasAnyRole('PAZIENTE')")
     @Operation(
             summary = "Medico curante del paziente",
-            description = "Restituisce le informazioni sul medico curante associato al paziente corrente, se presente."
+            description = "Restituisce le informazioni sul medico curante associato al paziente corrente. "
+                    + "Se non è associato nessun medico, la risposta è 200 con corpo JSON null (evita 404 strumentali in console)."
     )
     public ResponseEntity<MedicoCuranteResponse> getMioMedicoCurante() {
-        try {
-            Long accountId = SecurityUtils.getCurrentAccountId();
-            MedicoCuranteResponse medico = pazienteService.getMedicoCuranteResponseByPazienteAccountId(accountId);
-            if (medico == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(medico);
-        } catch (RuntimeException e) {
-            logger.warn("getMioMedicoCurante error: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (Throwable t) {
-            logger.error("getMioMedicoCurante unexpected error", t);
-            return ResponseEntity.notFound().build();
-        }
+        Long accountId = SecurityUtils.getCurrentAccountId();
+        MedicoCuranteResponse medico = pazienteService.getMedicoCuranteResponseByPazienteAccountId(accountId);
+        return ResponseEntity.ok(medico);
     }
 
     @PutMapping("/mio-medico")

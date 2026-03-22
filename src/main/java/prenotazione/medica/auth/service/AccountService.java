@@ -70,7 +70,7 @@ public class AccountService
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        return new AuthResponse(userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, token);
+        return new AuthResponse(userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles, token, null);
     }
 
     /**
@@ -126,9 +126,14 @@ public class AccountService
     }
 
     /**
-     * Cambia lo username dell'account corrente, garantendo l'unicità.
+     * Cambia lo username dell'account corrente, garantendo l'unicità, e restituisce una nuova sessione JWT
+     * con il claim {@code sub} allineato al nuovo username (il token precedente non è più valido per
+     * {@link prenotazione.medica.auth.jwt.JwtAuthenticationFilter}).
+     *
+     * @param newUsername nuovo username univoco
+     * @return dati utente e JWT aggiornati, più messaggio di conferma
      */
-    public void changeUsername(String newUsername) {
+    public AuthResponse changeUsername(String newUsername) {
         Long accountId = SecurityUtils.getCurrentAccountId();
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new BadRequestException("account.notfound", accountId));
@@ -139,5 +144,19 @@ public class AccountService
 
         account.setUsername(newUsername);
         accountRepository.save(account);
+
+        UserDetailsImpl userDetails = UserDetailsImpl.build(account);
+        String token = jwtService.generateTokenFromUsername(userDetails.getUsername());
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        return new AuthResponse(
+                userDetails.getId(),
+                userDetails.getUsername(),
+                userDetails.getEmail(),
+                roles,
+                token,
+                i18n.getMessage("auth.username.changed"));
     }
 }

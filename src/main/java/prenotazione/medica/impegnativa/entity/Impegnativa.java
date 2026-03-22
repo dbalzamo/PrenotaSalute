@@ -9,12 +9,14 @@ import prenotazione.medica.medico.entity.MedicoCurante;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import prenotazione.medica.richiestaMedica.entity.RichiestaMedica;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -62,6 +64,11 @@ public class Impegnativa extends EntityBase {
 	@ManyToOne
 	@JoinColumn(name = "id_medico_curante")
 	private MedicoCurante medicoCurante;
+
+	/** Richiesta medica da cui è stata generata (opzionale per dati legacy). */
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_richiesta_medica")
+	private RichiestaMedica richiestaMedica;
 
 	@OneToOne(mappedBy = "impegnativa", cascade = CascadeType.ALL)
 	private PrestazioneSanitaria prestazioneSanitaria;

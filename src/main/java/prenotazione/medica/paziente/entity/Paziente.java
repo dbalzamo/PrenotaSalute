@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.prenotasalute.commons.entity.EntityBase;
 import prenotazione.medica.medico.entity.MedicoCurante;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -61,8 +60,8 @@ public class Paziente extends EntityBase {
     @Column(name = "codice_fiscale", length = 16, nullable = false, unique = true)
     private String codiceFiscale;
 
-    /** Relazione uno-a-uno con l'account di login. */
-    @OneToOne(cascade = CascadeType.ALL)
+    /** Relazione uno-a-uno con l'account di login (nessun cascade: l'account è persistito da {@link AccountService}). */
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account", referencedColumnName = "id")
     @JsonManagedReference
     private Account account;

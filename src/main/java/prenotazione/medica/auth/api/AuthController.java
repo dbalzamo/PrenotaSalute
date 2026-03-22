@@ -23,12 +23,11 @@ import prenotazione.medica.auth.dto.request.SignupRequest;
 import prenotazione.medica.auth.dto.request.ChangePasswordRequest;
 import prenotazione.medica.auth.dto.request.ChangeUsernameRequest;
 import prenotazione.medica.auth.dto.response.AuthResponse;
-import prenotazione.medica.auth.dto.response.SignupResponse;
 import prenotazione.medica.auth.service.AccountService;
+import prenotazione.medica.auth.service.AuthRegistrationService;
 import prenotazione.medica.medico.dto.MedicoCuranteListItemDTO;
 import prenotazione.medica.shared.i18n.I18nMessageService;
 import prenotazione.medica.medico.service.MedicoCuranteService;
-import prenotazione.medica.paziente.service.PazienteService;
 
 import java.util.List;
 
@@ -37,7 +36,7 @@ import java.util.List;
  * <p>
  * <b>Ruolo nell'architettura:</b> espone POST /api/auth/login, /logout, /signup e GET /api/auth/medici-curanti.
  * Il login delega a {@link AccountService#loginAccount} e restituisce {@link AuthResponse} con JWT nel body (header Bearer per le chiamate successive);
- * il signup crea prima l'account poi il profilo (Paziente o MedicoCurante) tramite i rispettivi service.
+ * il signup è orchestrato da {@link AuthRegistrationService} (stessa transazione: account + profilo).
  * Le richieste a /api/auth/** sono pubbliche (configurate in {@link prenotazione.medica.shared.security.config.WebSecurityConfig}).
  * </p>
  */
@@ -51,11 +50,11 @@ public class AuthController
     @Autowired
     private AccountService accountService;
     @Autowired
-    private PazienteService pazienteService;
-    @Autowired
     private MedicoCuranteService medicoCuranteService;
     @Autowired
     private I18nMessageService i18n;
+    @Autowired
+    private AuthRegistrationService authRegistrationService;
 
     @PostMapping("/login")
     @Operation(
@@ -94,27 +93,8 @@ public class AuthController
             summary = "Registrazione nuovo utente",
             description = "Registra un nuovo account e crea il relativo profilo (paziente o medico curante) in base al ruolo indicato."
     )
-    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request)
-    {
-        SignupResponse signupResponse = accountService.creazioneAccount(request);
-
-        if (!signupResponse.getIsSuccess())
-        {
-            return ResponseEntity.badRequest().body(signupResponse.getMessage());
-        }
-
-        switch (request.getRuolo())
-        {
-            case PAZIENTE:
-                signupResponse = pazienteService.creazionePaziente(request, signupResponse.getAccount());
-                return ResponseEntity.ok(signupResponse.getMessage());
-            case MEDICO_CURANTE:
-                signupResponse = medicoCuranteService.creazioneMedicoCurante(request, signupResponse.getAccount());
-                return ResponseEntity.ok(signupResponse.getMessage());
-        }
-
-        accountService.deleteAccount(signupResponse.getAccount().getUsername());
-        return ResponseEntity.badRequest().body(i18n.getMessage("auth.signup.cancelled"));
+    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request) {
+        return authRegistrationService.signup(request);
     }
 
     @PutMapping("/change-password")
@@ -132,11 +112,11 @@ public class AuthController
     @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "Cambio username account corrente",
-            description = "Permette all'utente autenticato di cambiare il proprio username, se non già utilizzato."
+            description = "Aggiorna lo username e restituisce un nuovo JWT (stesso formato del login): "
+                    + "il client deve sostituire il Bearer token perché il precedente contiene il vecchio subject."
     )
-    public ResponseEntity<String> changeUsername(@RequestBody @Valid ChangeUsernameRequest request) {
-        accountService.changeUsername(request.getNewUsername());
-        return ResponseEntity.ok(i18n.getMessage("auth.username.changed"));
+    public ResponseEntity<AuthResponse> changeUsername(@RequestBody @Valid ChangeUsernameRequest request) {
+        return ResponseEntity.ok(accountService.changeUsername(request.getNewUsername()));
     }
 
 }

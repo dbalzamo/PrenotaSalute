@@ -8,6 +8,7 @@ import prenotazione.medica.auth.dto.request.SignupRequest;
 import prenotazione.medica.auth.dto.response.SignupResponse;
 import prenotazione.medica.medico.dto.response.MedicoCuranteResponse;
 import prenotazione.medica.auth.entity.Account;
+import prenotazione.medica.auth.repository.AccountRepository;
 import prenotazione.medica.medico.entity.MedicoCurante;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
 import prenotazione.medica.paziente.dto.PazienteDTO;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class PazienteService extends AbstractGenericService<Paziente, PazienteDTO, Long> {
 
     private final PazienteRepository pazienteRepository;
+    private final AccountRepository accountRepository;
     private final MedicoCuranteRepository medicoCuranteRepository;
     /** Riferimento tipizzato per metodi MapStruct oltre {@link GenericMapper} (es. signup). */
     private final PazienteMapper pazienteMapper;
@@ -46,11 +48,13 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
      * e inizializza le dipendenze specifiche di questo servizio.
      */
     public PazienteService(PazienteRepository pazienteRepository,
+                           AccountRepository accountRepository,
                            MedicoCuranteRepository medicoCuranteRepository,
                            PazienteMapper pazienteMapper,
                            I18nMessageService i18n) {
         super(pazienteRepository, pazienteMapper);
         this.pazienteRepository = pazienteRepository;
+        this.accountRepository = accountRepository;
         this.medicoCuranteRepository = medicoCuranteRepository;
         this.pazienteMapper = pazienteMapper;
         this.i18n = i18n;
@@ -63,7 +67,9 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
 
     /**
      * Restituisce il paziente associato all'account come DTO (per endpoint /me).
+     * Transazione attiva necessaria: {@code account} è LAZY e il mapper legge {@code account.email}.
      */
+    @Transactional(readOnly = true)
     public PazienteDTO findByAccountIdAsDto(Long accountId) {
         return mapper.toDTO(findByAccountId(accountId));
     }
@@ -72,7 +78,7 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
     public SignupResponse creazionePaziente(SignupRequest request, Account account)
     {
         Paziente paziente = pazienteMapper.toEntityFromSignupRequest(request);
-        paziente.setAccount(account);
+        paziente.setAccount(accountRepository.getReferenceById(account.getId()));
         if (request.getMedicoCuranteId() != null) {
             medicoCuranteRepository.findById(request.getMedicoCuranteId()).ifPresent(paziente::setMedicoCurante);
         }
@@ -85,6 +91,7 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
      * Aggiorna il paziente associato all'account (id = accountId).
      * Modifica il record esistente senza crearne di nuovi.
      */
+    @Transactional
     public String updatePaziente(Long accountId, PazienteDTO pazienteDTO) {
         Paziente existing = findByAccountId(accountId);
         existing.setNome(pazienteDTO.getNome());
@@ -134,6 +141,7 @@ public class PazienteService extends AbstractGenericService<Paziente, PazienteDT
     /**
      * Associa il medico curante al paziente loggato. Solo ruolo PAZIENTE.
      */
+    @Transactional
     public void setMedicoCurante(Long accountId, Long medicoCuranteId) {
         Paziente p = findByAccountId(accountId);
         MedicoCurante medico = medicoCuranteRepository.findById(medicoCuranteId)

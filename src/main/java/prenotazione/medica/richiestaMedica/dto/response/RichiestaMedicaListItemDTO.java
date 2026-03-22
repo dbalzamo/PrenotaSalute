@@ -1,6 +1,5 @@
 package prenotazione.medica.richiestaMedica.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +11,6 @@ import java.util.Date;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class RichiestaMedicaListItemDTO {
     private Long id;
     private Date dataEmissione;
@@ -20,5 +18,7 @@ public class RichiestaMedicaListItemDTO {
     private String tipoRichiesta;
     private String stato;
     private String descrizione;
+    /** Popolato quando è stata emessa un'impegnativa collegata alla richiesta. */
+    private Long impegnativaId;
 }
 

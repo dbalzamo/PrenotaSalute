@@ -29,6 +29,8 @@ import prenotazione.medica.richiestaMedica.repository.spec.RichiestaMedicaSpecif
 import prenotazione.medica.auth.SecurityUtils;
 import prenotazione.medica.shared.i18n.I18nMessageService;
 import prenotazione.medica.auth.service.AccountService;
+import prenotazione.medica.impegnativa.entity.Impegnativa;
+import prenotazione.medica.impegnativa.repository.ImpegnativaRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -61,6 +63,7 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
     private final MedicoCuranteService medicoCuranteService;
     private final PazienteRepository pazienteRepository;
     private final MedicoCuranteRepository medicoCuranteRepository;
+    private final ImpegnativaRepository impegnativaRepository;
     private final I18nMessageService i18n;
 
     public RichiestaMedicaService(RichiestaMedicaRepository richiestaMedicaRepository,
@@ -70,6 +73,7 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
                                   MedicoCuranteService medicoCuranteService,
                                   PazienteRepository pazienteRepository,
                                   MedicoCuranteRepository medicoCuranteRepository,
+                                  ImpegnativaRepository impegnativaRepository,
                                   I18nMessageService i18n) {
         super(richiestaMedicaRepository, richiestaMedicaMapper);
         this.richiestaMedicaRepository = richiestaMedicaRepository;
@@ -78,6 +82,7 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         this.medicoCuranteService = medicoCuranteService;
         this.pazienteRepository = pazienteRepository;
         this.medicoCuranteRepository = medicoCuranteRepository;
+        this.impegnativaRepository = impegnativaRepository;
         this.i18n = i18n;
     }
 
@@ -146,8 +151,10 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
             return Page.empty();
         }
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataEmissione"));
-        return richiestaMedicaRepository.findAll(spec, pageable)
-                .map(this::toListItemDto);
+        Page<RichiestaMedica> pageEntities = richiestaMedicaRepository.findAll(spec, pageable);
+        Map<Long, Long> impegnativaByRichiesta = impegnativaIdsByRichiestaIds(
+                pageEntities.getContent().stream().map(RichiestaMedica::getId).toList());
+        return pageEntities.map(r -> toListItemDto(r, impegnativaByRichiesta));
     }
 
     /** Restituisce le richieste del paziente attualmente autenticato in forma paginata, ordinate per data (più recente prima). */
@@ -166,21 +173,38 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         Paziente paziente = pazienteService.findByAccountId(account.getId());
         var spec = RichiestaMedicaSpecification.hasPazienteId(paziente.getId());
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataEmissione"));
-        Page<RichiestaMedicaListItemDTO> result = richiestaMedicaRepository.findAll(spec, pageable)
-                .map(this::toListItemDto);
+        Page<RichiestaMedica> pageEntities = richiestaMedicaRepository.findAll(spec, pageable);
+        Map<Long, Long> impegnativaByRichiesta = impegnativaIdsByRichiestaIds(
+                pageEntities.getContent().stream().map(RichiestaMedica::getId).toList());
+        Page<RichiestaMedicaListItemDTO> result = pageEntities.map(r -> toListItemDto(r, impegnativaByRichiesta));
         logger.info("findAllByPazienteId: accountId={}, pazienteId={}, richieste={}", accountId, paziente.getId(), result.getTotalElements());
         return result;
     }
 
-    private RichiestaMedicaListItemDTO toListItemDto(RichiestaMedica r) {
-        return new RichiestaMedicaListItemDTO(
-                r.getId(),
-                r.getDataEmissione(),
-                r.getDataAccettazione(),
-                r.getTipoRichiesta() != null ? r.getTipoRichiesta().name() : null,
-                r.getStato() != null ? r.getStato().name() : null,
-                r.getDescrizione()
-        );
+    private Map<Long, Long> impegnativaIdsByRichiestaIds(List<Long> richiestaIds) {
+        if (richiestaIds == null || richiestaIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Impegnativa> list = impegnativaRepository.findByRichiestaMedica_IdIn(richiestaIds);
+        Map<Long, Long> map = new HashMap<>();
+        for (Impegnativa i : list) {
+            if (i.getRichiestaMedica() != null) {
+                map.put(i.getRichiestaMedica().getId(), i.getId());
+            }
+        }
+        return map;
+    }
+
+    private RichiestaMedicaListItemDTO toListItemDto(RichiestaMedica r, Map<Long, Long> impegnativaByRichiesta) {
+        RichiestaMedicaListItemDTO dto = new RichiestaMedicaListItemDTO();
+        dto.setId(r.getId());
+        dto.setDataEmissione(r.getDataEmissione());
+        dto.setDataAccettazione(r.getDataAccettazione());
+        dto.setTipoRichiesta(r.getTipoRichiesta() != null ? r.getTipoRichiesta().name() : null);
+        dto.setStato(r.getStato() != null ? r.getStato().name() : null);
+        dto.setDescrizione(r.getDescrizione());
+        dto.setImpegnativaId(impegnativaByRichiesta.get(r.getId()));
+        return dto;
     }
 
     /** Restituisce tutte le richieste del medico curante attualmente autenticato, con dati paziente per la dashboard. */
@@ -193,6 +217,8 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         MedicoCurante medico = medicoCuranteService.findByAccountId(accountOptional.get().getId());
         var spec = RichiestaMedicaSpecification.hasMedicoCuranteId(medico.getId());
         List<RichiestaMedica> list = richiestaMedicaRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "dataEmissione"));
+        Map<Long, Long> impegnativaByRichiesta = impegnativaIdsByRichiestaIds(
+                list.stream().map(RichiestaMedica::getId).toList());
         List<RichiestaMedicaMedicoResponse> result = new ArrayList<>();
         for (RichiestaMedica r : list) {
             RichiestaMedicaMedicoResponse dto = new RichiestaMedicaMedicoResponse();
@@ -201,6 +227,7 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
             dto.setTipoRichiesta(r.getTipoRichiesta() != null ? r.getTipoRichiesta().name() : null);
             dto.setStato(r.getStato() != null ? r.getStato().name() : null);
             dto.setDescrizione(r.getDescrizione());
+            dto.setImpegnativaId(impegnativaByRichiesta.get(r.getId()));
             if (r.getPaziente() != null) {
                 dto.setPazienteId(r.getPaziente().getId());
                 dto.setPazienteNome(r.getPaziente().getNome());

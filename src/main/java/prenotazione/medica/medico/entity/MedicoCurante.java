@@ -6,9 +6,9 @@ import com.prenotasalute.commons.entity.EntityBase;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
 import prenotazione.medica.medico.service.MedicoCuranteService;
 import prenotazione.medica.paziente.entity.Paziente;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -65,8 +65,8 @@ public class MedicoCurante extends EntityBase {
     @Column(name = "specializzazione")
     private String specializzazione;
 
-    /** Account di login del medico (uno-a-uno). */
-    @OneToOne(cascade = CascadeType.ALL)
+    /** Account di login del medico (uno-a-uno; nessun cascade sull'account). */
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account", referencedColumnName = "id")
     @JsonManagedReference
     private Account account;
