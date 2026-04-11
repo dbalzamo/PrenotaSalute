@@ -276,9 +276,9 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         throw new ResourceNotFoundException("richiesta.notfound", idRichiestaMedica);
     }
 
-    /***
-     * fixedRate fa partire il metodo ogni intervallo di tempo a prescindere dal tempo di esecuzione
-     * (può partire anche se la precedente esecuzione non è ancora finita).
+    /**
+     * Job schedulato via cron: eseguito il primo giorno di ogni mese a mezzanotte.
+     * Aggiorna a stato SCADUTA tutte le richieste create più di 30 giorni fa.
      */
     @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
