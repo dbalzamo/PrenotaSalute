@@ -37,4 +37,6 @@ public interface RichiestaMedicaRepository extends JpaRepository<RichiestaMedica
         AND r.dataAccettazione <= :limite
     """)
     int scadutaRichieste(@Param("limite") Instant limite);
+
+    List<RichiestaMedica> findByStatoAndDataAccettazioneBefore(EStatoRichiesta stato, Instant limite);
 }

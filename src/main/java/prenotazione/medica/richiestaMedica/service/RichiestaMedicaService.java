@@ -276,18 +276,8 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         throw new ResourceNotFoundException("richiesta.notfound", idRichiestaMedica);
     }
 
-    /**
-     * Job schedulato via cron: eseguito il primo giorno di ogni mese a mezzanotte.
-     * Aggiorna a stato SCADUTA tutte le richieste create più di 30 giorni fa.
-     */
-    @Scheduled(cron = "0 0 0 1 * ?")
-    @Transactional
-    public void aggiornaStatiScaduti() {
-
-        Instant limite = Instant.now().minus(30, ChronoUnit.DAYS);
-
-        int aggiornate = richiestaMedicaRepository.scadutaRichieste(limite);
-
-        logger.info("{} richieste scadute automaticamente.", aggiornate);
+    public RichiestaMedica marcaScaduta(RichiestaMedica richiestaMedica){
+        richiestaMedica.setStato(EStatoRichiesta.SCADUTA);
+        return richiestaMedica;
     }
 }
