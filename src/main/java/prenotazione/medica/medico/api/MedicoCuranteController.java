@@ -1,6 +1,6 @@
 package prenotazione.medica.medico.api;
 
-import com.prenotasalute.commons.controller.GenericController;
+import prenotazione.medica.shared.utility.controller.GenericController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;

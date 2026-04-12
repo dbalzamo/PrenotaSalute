@@ -65,7 +65,7 @@ public class AccountService
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String token = jwtService.generateTokenFromUsername(userDetails.getUsername());
+        String token = jwtService.generateToken(userDetails);
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
@@ -146,7 +146,7 @@ public class AccountService
         accountRepository.save(account);
 
         UserDetailsImpl userDetails = UserDetailsImpl.build(account);
-        String token = jwtService.generateTokenFromUsername(userDetails.getUsername());
+        String token = jwtService.generateToken(userDetails);
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());

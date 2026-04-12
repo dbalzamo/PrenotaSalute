@@ -71,6 +71,13 @@ public class WebSecurityConfig {
 				.authorizeHttpRequests(auth ->
 						auth.requestMatchers("/error", contextPath + "/error").permitAll()
 								.requestMatchers("/api/auth/**", apiAuth).permitAll()
+								// SpringDoc / Swagger UI (path con e senza context-path)
+								.requestMatchers(
+										"/swagger-ui.html", contextPath + "/swagger-ui.html",
+										"/swagger-ui/**", contextPath + "/swagger-ui/**",
+										"/v3/api-docs", contextPath + "/v3/api-docs",
+										"/v3/api-docs/**", contextPath + "/v3/api-docs/**"
+								).permitAll()
 								.requestMatchers("/api/v1/**", apiV1).authenticated()
 								.anyRequest().authenticated());
 		http.authenticationProvider(authenticationProvider());

@@ -1,7 +1,7 @@
 package prenotazione.medica.medico.service;
 
-import com.prenotasalute.commons.mapper.GenericMapper;
-import com.prenotasalute.commons.service.AbstractGenericService;
+import prenotazione.medica.shared.utility.mapper.GenericMapper;
+import prenotazione.medica.shared.utility.service.AbstractGenericService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import prenotazione.medica.auth.dto.request.SignupRequest;
@@ -34,7 +34,7 @@ public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, 
 
     private final MedicoCuranteRepository medicoCuranteRepository;
     private final AccountRepository accountRepository;
-    /** Riferimento tipizzato per metodi MapStruct oltre {@link com.prenotasalute.commons.mapper.GenericMapper} (es. signup). */
+    /** Riferimento tipizzato per metodi MapStruct oltre {@link GenericMapper} (es. signup). */
     private final MedicoCuranteMapper medicoCuranteMapper;
     private final I18nMessageService i18n;
 
@@ -49,8 +49,8 @@ public class MedicoCuranteService extends AbstractGenericService<MedicoCurante, 
         this.i18n = i18n;
     }
 
-    public MedicoCurante findById(Long medicoCuranteId)
-    {
+    /** Carica l'entità medico; per il DTO via API usare il CRUD generico su {@link AbstractGenericService}. */
+    public MedicoCurante findEntityById(Long medicoCuranteId) {
         return medicoCuranteRepository.findById(medicoCuranteId)
                 .orElseThrow(() -> new ResourceNotFoundException("medico.notfound"));
     }

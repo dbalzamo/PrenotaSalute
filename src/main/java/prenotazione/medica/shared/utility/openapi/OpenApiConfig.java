@@ -1,4 +1,4 @@
-package prenotazione.medica.shared.config;
+package prenotazione.medica.shared.utility.openapi;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
@@ -7,19 +7,13 @@ import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configurazione centralizzata di OpenAPI/Swagger per PrenotaSalute.
+ * Metadati OpenAPI globali (info applicativa, schema JWT Bearer), collocati nel modulo commons condiviso.
  * <p>
- * Definisce:
- * <ul>
- *   <li>metadati dell'API (titolo, descrizione, versione);</li>
- *   <li>server di riferimento (es. ambiente dev locale);</li>
- *   <li>schema di sicurezza JWT Bearer da usare sugli endpoint protetti.</li>
- * </ul>
- * La UI è disponibile in dev/test su /swagger-ui.html.
+ * L'URL del server per Swagger "Try it out" è impostato in {@code application.properties}
+ * tramite {@code springdoc.open-api.servers} (include {@code server.servlet.context-path}).
  */
 @Configuration
 @OpenAPIDefinition(
@@ -32,9 +26,6 @@ import org.springframework.context.annotation.Configuration;
                         email = "support@prenotasalute.example"
                 )
         ),
-        servers = {
-                @Server(url = "http://localhost:8080", description = "Ambiente di sviluppo locale")
-        },
         security = {
                 @SecurityRequirement(name = "bearer-jwt")
         }
@@ -49,4 +40,3 @@ import org.springframework.context.annotation.Configuration;
 )
 public class OpenApiConfig {
 }
-

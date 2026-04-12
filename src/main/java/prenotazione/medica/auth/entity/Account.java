@@ -1,7 +1,7 @@
 package prenotazione.medica.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

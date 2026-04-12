@@ -1,7 +1,7 @@
 package prenotazione.medica.paziente.service;
 
-import com.prenotasalute.commons.mapper.GenericMapper;
-import com.prenotasalute.commons.service.AbstractGenericService;
+import prenotazione.medica.shared.utility.mapper.GenericMapper;
+import prenotazione.medica.shared.utility.service.AbstractGenericService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import prenotazione.medica.auth.dto.request.SignupRequest;

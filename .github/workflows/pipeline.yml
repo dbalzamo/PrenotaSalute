@@ -27,9 +27,6 @@ jobs:
 
       - name: Build e Test
         run: mvn clean verify --settings settings.xml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
 
       - name: SonarQube Analysis
         run: |
@@ -41,11 +38,7 @@ jobs:
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
       - name: Build Docker image
-        run: |
-          docker build \
-            --build-arg GITHUB_TOKEN=${{ secrets.GH_PACKAGES_TOKEN }} \
-            --build-arg GITHUB_ACTOR=${{ github.actor }} \
-            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Login Docker Hub
         if: github.ref == 'refs/heads/master'

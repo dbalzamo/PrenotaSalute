@@ -1,6 +1,6 @@
 package prenotazione.medica.prestazioneSanitaria.api;
 
-import com.prenotasalute.commons.controller.GenericController;
+import prenotazione.medica.shared.utility.controller.GenericController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

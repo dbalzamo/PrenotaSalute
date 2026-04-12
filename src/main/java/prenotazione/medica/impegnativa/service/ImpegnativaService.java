@@ -1,6 +1,6 @@
 package prenotazione.medica.impegnativa.service;
 
-import com.prenotasalute.commons.service.AbstractGenericService;
+import prenotazione.medica.shared.utility.service.AbstractGenericService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

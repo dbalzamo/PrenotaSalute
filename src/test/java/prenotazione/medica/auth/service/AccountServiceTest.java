@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import prenotazione.medica.auth.SecurityUtils;
 import prenotazione.medica.auth.dto.response.AuthResponse;
 import prenotazione.medica.auth.entity.Account;
+import prenotazione.medica.auth.entity.UserDetailsImpl;
 import prenotazione.medica.auth.jwt.JwtService;
 import prenotazione.medica.auth.repository.AccountRepository;
 import prenotazione.medica.shared.enums.ERuolo;
@@ -56,7 +57,7 @@ class AccountServiceTest {
             when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
             when(accountRepository.existsByUsername("nuovo")).thenReturn(false);
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(jwtService.generateTokenFromUsername("nuovo")).thenReturn("new-jwt");
+            when(jwtService.generateToken(any(UserDetailsImpl.class))).thenReturn("new-jwt");
             when(i18n.getMessage("auth.username.changed")).thenReturn("Username aggiornato.");
 
             AuthResponse response = accountService.changeUsername("nuovo");
@@ -65,7 +66,7 @@ class AccountServiceTest {
             assertThat(response.getToken()).isEqualTo("new-jwt");
             assertThat(response.getMessage()).isEqualTo("Username aggiornato.");
             assertThat(response.getId()).isEqualTo(10L);
-            verify(jwtService).generateTokenFromUsername(eq("nuovo"));
+            verify(jwtService).generateToken(any(UserDetailsImpl.class));
         }
     }
 }

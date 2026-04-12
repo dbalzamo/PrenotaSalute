@@ -4,7 +4,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: prenotasalute-db
+    container_name: MySQL-server
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: hospital_book_management
@@ -20,9 +20,10 @@ services:
 
   app:
     image: dariobalzamo02/prenotazione-medica:latest
-    container_name: prenotasalute-app
+    container_name: Medivue-service
     ports:
       - "8080:8080"
+    # Variabili ${...}: Docker Compose le legge dal file .env nella stessa cartella del compose (o dall'ambiente shell).
     environment:
       DB_URL: jdbc:mysql://mysql:3306/hospital_book_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: ${DB_USERNAME}

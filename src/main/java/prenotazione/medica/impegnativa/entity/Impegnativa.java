@@ -1,6 +1,6 @@
 package prenotazione.medica.impegnativa.entity;
 
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import prenotazione.medica.impegnativa.service.ImpegnativaService;
 import prenotazione.medica.impegnativa.api.ImpegnativaController;
 import prenotazione.medica.prestazioneSanitaria.entity.PrestazioneSanitaria;

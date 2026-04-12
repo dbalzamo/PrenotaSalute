@@ -1,7 +1,6 @@
 package prenotazione.medica.richiestaMedica.service;
 
-import com.prenotasalute.commons.service.AbstractGenericService;
-import jakarta.transaction.Transactional;
+import prenotazione.medica.shared.utility.service.AbstractGenericService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,8 +35,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import prenotazione.medica.richiestaMedica.dto.response.RichiestaMedicaListItemDTO;
 
@@ -120,7 +117,7 @@ public class RichiestaMedicaService extends AbstractGenericService<RichiestaMedi
         richiestaMedica.setDescrizione(request.getDescrizione());
         richiestaMedica.setId(null);
         richiestaMedica.setPaziente(pazienteService.findByAccountId(SecurityUtils.getCurrentAccountId()));
-        richiestaMedica.setMedicoCurante(medicoCuranteService.findById(request.getIdMedico()));
+        richiestaMedica.setMedicoCurante(medicoCuranteService.findEntityById(request.getIdMedico()));
         richiestaMedica.setTipoRichiesta(ETipoRichiesta.valueOf(request.getTipoRichiesta()));
         richiestaMedica.setDataEmissione(new Date());
         richiestaMedica.setStato(EStatoRichiesta.INVIATA);

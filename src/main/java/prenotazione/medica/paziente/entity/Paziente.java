@@ -2,7 +2,7 @@ package prenotazione.medica.paziente.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import prenotazione.medica.medico.entity.MedicoCurante;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

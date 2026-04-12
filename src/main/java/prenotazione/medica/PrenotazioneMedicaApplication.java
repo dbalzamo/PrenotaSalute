@@ -4,8 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import prenotazione.medica.shared.config.DotenvBootstrap;
-
 /**
  * Punto di ingresso dell'applicazione Spring Boot "Prenotazione Medica".
  * <p>
@@ -27,7 +25,6 @@ public class PrenotazioneMedicaApplication {
 	 * Invocato solo al lancio dell'applicazione (es. {@code mvn spring-boot:run}).
 	 */
 	public static void main(String[] args) {
-		DotenvBootstrap.apply();
 		SpringApplication.run(PrenotazioneMedicaApplication.class, args);
 	}
 	

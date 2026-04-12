@@ -6,6 +6,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -15,11 +16,13 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import prenotazione.medica.auth.entity.UserDetailsImpl;
 
 /**
  * Servizio per generazione, validazione ed estrazione del JWT.
  * Il token viene letto solo dall'header {@code Authorization: Bearer <token>}.
  * Chiave e scadenza in application.properties (jwt.secret, jwt.expirationMs).
+ * Il claim {@code role} contiene il nome enum del ruolo (es. MEDICO_CURANTE) per i microservizi.
  */
 @Service
 public class JwtService {
@@ -86,9 +89,18 @@ public class JwtService {
         return false;
     }
 
-    public String generateTokenFromUsername(String username) {
+    /**
+     * Genera il JWT con subject (username) e claim {@code role} (es. MEDICO_CURANTE) per uso nei microservizi.
+     */
+    public String generateToken(UserDetailsImpl user) {
+        String role = user.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.startsWith("ROLE_") ? a.substring("ROLE_".length()) : a)
+                .orElse("");
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(user.getUsername())
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(signingKey())

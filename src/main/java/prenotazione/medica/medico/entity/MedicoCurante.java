@@ -2,7 +2,7 @@ package prenotazione.medica.medico.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
 import prenotazione.medica.medico.service.MedicoCuranteService;
 import prenotazione.medica.paziente.entity.Paziente;
@@ -38,13 +38,13 @@ import java.util.List;
  *
  * @see JsonIgnoreProperties – ignora proxy Hibernate in serializzazione JSON per evitare errori.
  */
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "medico_curante")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Entity
+@Table(name = "medico_curante")
 public class MedicoCurante extends EntityBase {
 
     @Column(name = "nome", length = 20, nullable = false)

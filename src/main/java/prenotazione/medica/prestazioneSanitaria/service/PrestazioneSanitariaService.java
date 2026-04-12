@@ -1,6 +1,6 @@
 package prenotazione.medica.prestazioneSanitaria.service;
 
-import com.prenotasalute.commons.service.AbstractGenericService;
+import prenotazione.medica.shared.utility.service.AbstractGenericService;
 import org.springframework.stereotype.Service;
 import prenotazione.medica.impegnativa.service.ImpegnativaService;
 import prenotazione.medica.prestazioneSanitaria.dto.PrestazioneSanitariaDTO;

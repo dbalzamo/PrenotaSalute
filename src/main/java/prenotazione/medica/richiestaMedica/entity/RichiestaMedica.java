@@ -3,7 +3,7 @@ package prenotazione.medica.richiestaMedica.entity;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import prenotazione.medica.paziente.entity.Paziente;
 import prenotazione.medica.medico.entity.MedicoCurante;
 import jakarta.persistence.Column;

@@ -1,6 +1,6 @@
 package prenotazione.medica.prestazioneSanitaria.entity;
 
-import com.prenotasalute.commons.entity.EntityBase;
+import prenotazione.medica.shared.utility.entity.EntityBase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

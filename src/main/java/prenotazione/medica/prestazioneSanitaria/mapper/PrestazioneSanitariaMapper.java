@@ -1,6 +1,6 @@
 package prenotazione.medica.prestazioneSanitaria.mapper;
 
-import com.prenotasalute.commons.mapper.GenericMapper;
+import prenotazione.medica.shared.utility.mapper.GenericMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
