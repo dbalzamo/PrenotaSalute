@@ -2,13 +2,8 @@ package prenotazione.medica.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.prenotasalute.commons.entity.EntityBase;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import prenotazione.medica.auth.service.UserDetailsServiceImpl;
 import prenotazione.medica.paziente.entity.Paziente;
 import prenotazione.medica.medico.entity.MedicoCurante;
@@ -40,6 +35,7 @@ import prenotazione.medica.shared.enums.ERuolo;
 @AllArgsConstructor
 @Entity
 @Table(name = "account")
+@EntityListeners(AuditingEntityListener.class)
 public class Account extends EntityBase
 {
 	@Column(name = "username", length = 50, nullable = false)

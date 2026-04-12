@@ -3,16 +3,10 @@ package prenotazione.medica.medico.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.prenotasalute.commons.entity.EntityBase;
+import jakarta.persistence.*;
 import prenotazione.medica.medico.repository.MedicoCuranteRepository;
 import prenotazione.medica.medico.service.MedicoCuranteService;
 import prenotazione.medica.paziente.entity.Paziente;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,6 +17,8 @@ import prenotazione.medica.richiestaMedica.entity.RichiestaMedica;
 
 import java.util.Date;
 import java.util.List;
+
+
 
 /**
  * Entità JPA che rappresenta un medico curante (dati anagrafici e relazioni).
@@ -39,12 +35,12 @@ import java.util.List;
  * @see JsonIgnoreProperties – ignora proxy Hibernate in serializzazione JSON per evitare errori.
  */
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "medico_curante")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Entity
+@Table(name = "medico_curante")
 public class MedicoCurante extends EntityBase {
 
     @Column(name = "nome", length = 20, nullable = false)
@@ -80,4 +76,3 @@ public class MedicoCurante extends EntityBase {
     @OneToMany(mappedBy = "medicoCurante")
     private List<Impegnativa> impegnative;
 }
-

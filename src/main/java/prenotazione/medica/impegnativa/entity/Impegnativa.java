@@ -1,21 +1,12 @@
 package prenotazione.medica.impegnativa.entity;
 
 import com.prenotasalute.commons.entity.EntityBase;
+import jakarta.persistence.*;
 import prenotazione.medica.impegnativa.service.ImpegnativaService;
 import prenotazione.medica.impegnativa.api.ImpegnativaController;
 import prenotazione.medica.prestazioneSanitaria.entity.PrestazioneSanitaria;
 import prenotazione.medica.paziente.entity.Paziente;
 import prenotazione.medica.medico.entity.MedicoCurante;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import prenotazione.medica.richiestaMedica.entity.RichiestaMedica;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,11 +27,11 @@ import prenotazione.medica.shared.enums.ETipoRichiesta;
  * @see EPrioritàPrescrizione – priorità della prescrizione.
  * @see ETipoRichiesta – tipo di ricetta (es. farmaco, visita).
  */
-@Entity
-@Table(name="impegnativa")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name="impegnativa")
 public class Impegnativa extends EntityBase {
 
 	@Column(name = "regione", length = 50, nullable = false)
